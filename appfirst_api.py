@@ -302,3 +302,151 @@ class AppFirstApi(object):
 
         # Send request
         return self._make_api_request('/servers/{0}/processes/data/'.format(host_id), params=params)
+
+
+     #alert APIs
+    def get_alerts(self, **kwargs):
+        """
+        Returns the list of alerts existing.
+
+        Arguments
+            - limit (optional, default:2500, max:2500) – Sets the page size to a limit set by the user.
+            - page (optional, default:0) – Retrieve the specific page of data of size limit.
+            - filter_name (optional) – the type of object to filter the alerts. Must be one of “application_id”,
+                ”process_id”,”server_id”, “polled_data_id”, “log_id”.
+            - filter_id (optional) – The id of the objects, must be integer value.
+
+        http://support.appfirst.com/apis/alerts/#alerts
+        """
+        filter_types = ["application_id","process_id","server_id", "polled_data_id", "log_id"]
+
+        params = {'limit': kwargs.get('limit', 2500)}
+        page = kwargs.get('page', 0)
+        filter_name = kwargs.get('filter_name',None)
+        params['filter_id'] = kwargs.get('filter_id',None)
+
+        #sanity check
+        if filter_name is not None and filter_name not in filter_types:
+            raise ValueError("Filter Name must be {0}".format(repr(filter_types)))
+        else:
+            params['filter_name'] = filter_name
+
+        # Send request
+        return self._make_api_request('/alerts/', params=params)
+
+
+    def add_alert(self,name,alert_type,target_id,trigger_type,users,**kwargs):
+        """
+        Creates alerts on processes based on documented requirements:
+
+        - name (required, String, length:1-32) – the name of the alert.
+        - target_id (required, String) – the system id of the target object. It is a comma separated
+            list for ‘Process’ alert (server id, process pid, process creation time and process name,
+            or ‘server_id,pid,creationtime,myname’).
+        - trigger_type (required, String) – alert type decides what trigger types are available.
+            - ‘Process’ – ['Process Termination', 'CPU', 'Memory', 'Average Response Time', 'File Read',
+            'Files Write', 'Inbound Network Traffic', 'Outbound Network Traffic', 'Network Connections',
+            'Threads', 'Files', 'Registries', 'Page Faults', 'Incident Reports',
+            'Critical Incident Reports', 'Incident Report Content', 'File Accessed', 'Registry Accessed', 'Port Accessed']
+
+        Optional arguments are added at the end
+
+        http://support.appfirst.com/apis/alerts/#alerts
+        """
+        data = {}
+
+        #specify alert type
+        alert_types = ["Process","Applicaiton","Log","Polled Data","Server", "Server Tag"]
+        if alert_type in alert_types:
+            data['type'] = alert_type
+        else:
+            raise ValueError("Alert type specified must be one of {0}".format(alert_types))
+
+        #check that name is not too long
+        if len(name)<32:
+            data['name'] = name
+        else:
+            raise ValueError("Name provided is too long")
+
+        #check target id for process alert and other alerts
+        if alert_type=="Process" and len(target_id.split(','))!=4:
+            raise ValueError("Process target id must have 4 paramaters, server_id,pid,creationtime,myname")
+        else:
+            data['target_id'] = target_id
+
+        #build list of trigger types based on alert type
+        if alert_type=="Process":
+            trigger_types = ['Process Termination', 'CPU', 'Memory', 'Average Response Time',
+                             'File Read', 'File Write', 'Inbound Network Traffic', 'Outbound Network Traffic',
+                             'Network Connections', 'Threads', 'Files', 'Registries', 'Page Faults',
+                             'Incident Reports', 'Critical Incident Reports', 'Incident Report Content',
+                             'File Accessed', 'Registry Accessed', 'Port Accessed']
+        elif alert_type=="Server" or alert_type=="Server Tag":
+            trigger_types = ['Server Down', 'CPU', 'Memory', 'Average Response Time', 'Disk', 'Disk Busy',
+                             'Threads', 'Page Faults', 'Processes']
+        elif alert_type=="Log":
+            trigger_types = ['Number of Info', 'Number of Warning', 'Number of Critical', 'Log Content']
+        elif alert_type=="Polled Data":
+            trigger_types = ['Nagios']
+        elif alert_type=="Application":
+            trigger_types = ['Processes', 'Process Termination', 'CPU', 'Memory', 'Average Response Time',
+                             'File Read', 'File Write', 'Inbound Network Traffic', 'Outbound Network Traffic',
+                             'Network Connections', 'Threads', 'Files', 'Registries', 'Page Faults',
+                             'Incident Reports', 'Critical Incident Reports', 'Incident Report Content',
+                             'File Accessed', 'Registry Accessed', 'Port Accessed']
+
+        #check that trigger type specified is correct for specified alert type
+        if trigger_type in trigger_types:
+            data['trigger_type'] = trigger_type
+        else:
+            raise ValueError("Trigger type is required or provided trigger type is not correct")
+
+        #check and add optional arguments
+        if 'active' in kwargs:
+            data['active'] = kwargs['active']
+        if 'direction' in kwargs:
+            data['direction'] = kwargs['direction']
+        if 'threshold' in kwargs:
+            data['threshold'] = kwargs['threshold']
+        if 'interval' in kwargs:
+            data['interval'] = kwargs['interval']
+        if 'time_above_threshold' in kwargs:
+            data['time_above_threshold'] = kwargs['time_above_threshold']
+        if 'num_of_servers' in kwargs:
+            data['num_of_servers'] = kwargs['num_of_servers']
+        if 'threshold_type' in kwargs:
+            data['threshold_type'] = kwargs['threshold_type']
+        if 'band_value' in kwargs:
+            data['band_value'] = kwargs['band_value']
+        if 'window_length' in kwargs:
+            data['window_length'] = kwargs['window_length']
+        if 'window_units' in kwargs:
+            data['window_units'] = kwargs['window_units']
+        if 'ip_detail' in kwargs:
+            data['ip_detail'] = kwargs['ip_detail']
+        if 'reg_exp' in kwargs:
+            data['reg_exp'] = kwargs['reg_exp']
+
+        #add user data as json per documentation
+        data['users'] = json.dumps(users)
+
+        return self._make_api_request('/alerts/', data=data, method="POST")
+
+    def remove_alert(self,alert_id):
+        """
+        Removes alert by specific alert id
+
+        http://support.appfirst.com/apis/alerts/#alerts
+        """
+
+        return self._make_api_request('/alerts/{0}'.format(alert_id), method="DELETE" )
+
+
+    def get_alert(self,alert_id):
+        """
+        Returns current status of specific alert
+
+        http://support.appfirst.com/apis-v3-alerts/#alertid
+        """
+
+        return self._make_api_request('/alerts/{0}'.format(alert_id))
