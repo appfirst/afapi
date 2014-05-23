@@ -255,12 +255,12 @@ class AppFirstApi(object):
         # Sanity Checks
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
-        else:
+        elif end is not None:
             params['end'] = time.mktime(end.timetuple())
             
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
-        else:
+        elif start is not None:
             params['start'] = time.mktime(start.timetuple())
             
         return self._make_api_request('/servers/{0}/processes/'.format(host_id), params=params)
@@ -287,17 +287,17 @@ class AppFirstApi(object):
         # Sanity Checks
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
-        else:
+        elif end is not None:
             params['end'] = time.mktime(end.timetuple())
             
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
-        else:
+        elif start is not None:
             params['start'] = time.mktime(start.timetuple())
             
         if time_step not in ['Minute', 'Hour', 'Day']:
             raise ValueError("Invalid time_step: {0}".format(time_step))
-        else:
+        elif time_step is not None:
             params['time_step'] = time_step
 
         # Send request
