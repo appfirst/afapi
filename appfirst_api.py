@@ -431,3 +431,4 @@ class AppFirstApi(object):
         """
 
         return self._make_api_request('/alerts/{0}'.format(alert_id))
+
