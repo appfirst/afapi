@@ -15,9 +15,10 @@ from . import sessions
 
 
 def request(method, url, **kwargs):
+    
     """Constructs and sends a :class:`Request <Request>`.
     Returns :class:`Response <Response>` object.
-
+    
     :param method: method for the new :class:`Request` object.
     :param url: URL for the new :class:`Request` object.
     :param params: (optional) Dictionary or bytes to be sent in the query string for the :class:`Request`.
@@ -84,7 +85,6 @@ def post(url, data=None, **kwargs):
     :param data: (optional) Dictionary, bytes, or file-like object to send in the body of the :class:`Request`.
     :param \*\*kwargs: Optional arguments that ``request`` takes.
     """
-
     return request('post', url, data=data, **kwargs)
 
 

@@ -31,7 +31,7 @@ class AppFirstApi(object):
 
 
     # Helper methods
-    def _make_api_request(self, url, **kwargs):
+    def _make_api_request(self, url, json_dump = True, **kwargs):
         """
         Hits the API at `url` and returns the data from the request
 
@@ -46,7 +46,9 @@ class AppFirstApi(object):
         params = kwargs.get('params', {})
         headers = kwargs.get('headers', {})
         data = kwargs.get('data', '')
-        if isinstance(data, dict):
+
+        
+        if isinstance(data, dict) and json_dump == True:
             data = json.dumps(data)
 
         if method == 'GET':
@@ -59,14 +61,17 @@ class AppFirstApi(object):
             request_method = requests.delete
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
-
+        
         # Make request and check return status
         r = request_method(full_url, auth=(self.email, self.api_key),
                            params=params, data=data, headers=headers)
         if r.status_code == requests.codes.ok:
-            return r.json()
+            try:
+                return r.json()
+            except ValueError:
+                return r.text
         else:
-            raise exceptions.RequestError("Server returned status code: {0}".format(r.status_code))
+            raise exceptions.RequestError("Server returned status code: {0}".format(r.text))
 
 
     # Server APIs
@@ -318,7 +323,7 @@ class AppFirstApi(object):
 
         http://support.appfirst.com/apis/alerts/#alerts
         """
-        filter_types = ["application_id","process_id","server_id", "polled_data_id", "log_id"]
+        filter_types = ["application_id", "process_id", "server_id", "polled_data_id", "log_id"]
 
         params = {'limit': kwargs.get('limit', 2500)}
         params['page'] = kwargs.get('page', 0)
@@ -354,7 +359,9 @@ class AppFirstApi(object):
         http://support.appfirst.com/apis/alerts/#alerts
         """
         data = {}
-
+        #add user data as json per documentation
+        data['users'] = users
+        
         #specify alert type
         alert_types = ["Process","Applicaiton","Log","Polled Data","Server", "Server Tag"]
         if alert_type in alert_types:
@@ -408,10 +415,7 @@ class AppFirstApi(object):
             if arg in kwargs:
                 data[arg] = kwargs[arg]
 
-        #add user data as json per documentation
-        data['users'] = json.dumps(users)
-
-        return self._make_api_request('/alerts/', data=data, method="POST")
+        return self._make_api_request('/alerts/', data=data, method="POST",  json_dump = False )
 
     def remove_alert(self, alert_id):
         """
@@ -420,7 +424,7 @@ class AppFirstApi(object):
         http://support.appfirst.com/apis/alerts/#alerts
         """
 
-        return self._make_api_request('/alerts/{0}'.format(alert_id), method="DELETE" )
+        return self._make_api_request('/alerts/{0}'.format(alert_id), method="DELETE")
 
 
     def get_alert(self, alert_id):
