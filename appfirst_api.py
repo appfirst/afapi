@@ -71,7 +71,7 @@ class AppFirstApi(object):
             except ValueError:
                 return r.text
         else:
-            raise exceptions.RequestError("Server returned status code: {0}".format(r.text))
+            raise exceptions.RequestError("Server returned status code: {0}".format(r.status_code))
 
 
     # Server APIs
@@ -309,7 +309,7 @@ class AppFirstApi(object):
         return self._make_api_request('/servers/{0}/processes/data/'.format(host_id), params=params)
 
 
-     #alert APIs
+    # alert APIs
     def get_alerts(self, **kwargs):
         """
         Returns the list of alerts existing.
@@ -436,3 +436,34 @@ class AppFirstApi(object):
 
         return self._make_api_request('/alerts/{0}'.format(alert_id))
 
+    # server tags
+    def get_server_tags(self, **kwargs):
+        """
+        Lists all available server tags or create a new server tag.
+
+        http://support.appfirst.com/apis/server-tags/#servertags
+        """
+        params = {'limit': kwargs.get('limit', 2500)}
+        params['page'] = kwargs.get('page', 0)
+        params['filter'] = kwargs.get('filter_name', None)
+
+        # Send request
+        return self._make_api_request('/server_tags/', params=params)
+
+    def create_server_tag(self, name, ids):
+        """
+        Create a new server tag.
+
+        - name (required) – the name of the server tag, length must be 1 – 256 characters.
+        - servers (required) – a list of server IDs.
+        """
+        data = {}
+        data['name'] = name
+        data['servers'] = ids
+        return self._make_api_request('server_tags/', data=data, method="POST", json_dump=False)
+
+    def remove_server_tag(self, tag_id):
+        """
+        Deletes a server tag
+        """
+        return self._make_api_request('/server_tags/{0}'.format(tag_id), method="DELETE")
