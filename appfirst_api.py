@@ -417,6 +417,7 @@ class AppFirstApi(object):
 
         return self._make_api_request('/alerts/', data=data, method="POST",  json_dump = False )
 
+
     def remove_alert(self, alert_id):
         """
         Removes alert by specific alert id
