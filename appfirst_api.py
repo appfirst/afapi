@@ -24,14 +24,14 @@ class AppFirstApi(object):
     different forms of data.
     """
 
-    def __init__(self, email=None, api_key=None, base_url='https://wwws.appfirst.com/api'):
+    def __init__(self, email, api_key, base_url='https://wwws.appfirst.com/api'):
         self.email = email
         self.api_key = api_key
         self.base_url = base_url
 
 
     # Helper methods
-    def _make_api_request(self, url, json_dump = True, **kwargs):
+    def _make_api_request(self, url, **kwargs):
         """
         Hits the API at `url` and returns the data from the request
 
@@ -40,13 +40,14 @@ class AppFirstApi(object):
             - params:  defaults to {}
             - data:    defaults to '' (for PUT requests)
             - headers: defaults to {}
+            - json_dump: defaults to True. Whether or not to dump data dictionary.
         """
         full_url = self.base_url + url
         method = kwargs.get('method', 'GET')
         params = kwargs.get('params', {})
         headers = kwargs.get('headers', {})
         data = kwargs.get('data', '')
-
+        json_dump = kwargs.get('json_dump', True)
         
         if isinstance(data, dict) and json_dump == True:
             data = json.dumps(data)
@@ -71,7 +72,8 @@ class AppFirstApi(object):
             except ValueError:
                 return r.text
         else:
-            raise exceptions.RequestError("Server returned status code: {0}".format(r.status_code))
+            err_msg = "{0}: {1}".format(r.status_code, r.text) if r.text != '' else r.status_code
+            raise exceptions.RequestError("Server returned status code: {0}".format(err_msg))
 
 
     # Server APIs
@@ -468,3 +470,16 @@ class AppFirstApi(object):
         Deletes a server tag
         """
         return self._make_api_request('/server_tags/{0}'.format(tag_id), method="DELETE")
+
+    # Applications
+    def get_applications(self):
+        """
+        Returns a dictionary of details for all definined applications.
+        """
+        return self._make_api_request('/applications/')
+
+    def get_application(self, app_id):
+        """
+        Returns a dictionary of details for a specific application matching app_id
+        """
+        return self._make_api_request('/applications/{0}/'.format(app_id))
