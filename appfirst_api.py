@@ -76,6 +76,7 @@ class AppFirstApi(object):
             raise exceptions.RequestError("Server returned status code: {0}".format(err_msg))
 
 
+
     # Server APIs
     def get_servers(self, hostname=None):
         """
@@ -440,9 +441,9 @@ class AppFirstApi(object):
         return self._make_api_request('/alerts/{0}'.format(alert_id))
 
     # server tags
-    def get_server_tags(self, **kwargs):
+    def get_all_server_tags(self, **kwargs):
         """
-        Lists all available server tags or create a new server tag.
+        Lists all available server tags.
 
         http://support.appfirst.com/apis/server-tags/#servertags
         """
@@ -465,11 +466,12 @@ class AppFirstApi(object):
         data['servers'] = ids
         return self._make_api_request('server_tags/', data=data, method="POST", json_dump=False)
 
-    def remove_server_tag(self, tag_id):
+    def delete_server_tag(self, tag_id):
         """
         Deletes a server tag
         """
         return self._make_api_request('/server_tags/{0}'.format(tag_id), method="DELETE")
+
 
     # Applications
     def get_applications(self):
