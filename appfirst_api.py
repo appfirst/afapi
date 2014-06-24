@@ -366,7 +366,7 @@ class AppFirstApi(object):
         data['users'] = users
         
         #specify alert type
-        alert_types = ["Process","Applicaiton","Log","Polled Data","Server", "Server Tag"]
+        alert_types = ["Process","Application","Log","Polled Data","Server", "Server Tag"]
         if alert_type in alert_types:
             data['type'] = alert_type
         else:
@@ -480,8 +480,94 @@ class AppFirstApi(object):
         """
         return self._make_api_request('/applications/')
 
-    def get_application(self, app_id):
+    def get_application(self, application_id):
         """
-        Returns a dictionary of details for a specific application matching app_id
+        Returns a dictionary of details for a specific application matching application_id
         """
-        return self._make_api_request('/applications/{0}/'.format(app_id))
+        return self._make_api_request('/applications/{0}/'.format(application_id))
+
+    def add_application(self, name, source_type, template_id, **kwargs):
+        """
+        Creates an application based on the documented requirements:
+
+        - name(required, String, length:1-32) - the name of the application
+        - source_type(required, String) - either "servers" or "set"
+        - servers(required if source_type==servers, String of comma-separated server ids) - the list of server ids
+        - set(required if source_type==set, integer) - server set id
+        - template_id(required, integer) - application template id
+
+        Optional arguments are adding at the end
+
+        """
+        data = {}
+        
+        if len(name) < 32:
+            data['app_name'] = name
+        else:
+            raise ValueError("Name provided is too long")
+
+        if source_type == 'servers':
+            data['source_type'] = 'servers'
+            data['servers'] = kwargs.get('servers', "")
+        elif source_type == 'set':
+            data['source_type'] = 'set'
+            data['set'] = kwargs.get('set', "")
+        else:
+            raise ValueError("Source Type must be either 'servers' or 'set' to create application")
+
+        data['template_id'] = template_id
+
+        return self._make_api_request('/v4/applications/', data=data, method="POST", json_dump=False)
+
+    def remove_application(self, application_id):
+        """
+        Removes an application by specific application id
+
+        """
+        return self._make_api_request('/v4/applications/{0}'.format(application_id), method="DELETE")
+
+    #Templates
+    def get_templates(self):
+        """
+        Returns a dictionary for all defined templates
+        """
+        return self._make_api_request('/v4/applications/templates/')
+
+    def get_template(self, template_id):
+        """
+        Returns a dictionary of details for a specific template matching template_id
+        """
+        return self._make_api_request('/v4/applications/templates/{0}'.format(template_id))
+
+    def add_template(self, name, proc_name, proc_args, proc_args_direction):
+        """
+        Creates a template based on the documented requirements:
+
+        - name(required, String, length:1-32) - the name of the template
+        - proc_name(required, regex String) - the name of the process to watch
+        - proc_args(required, regex String) - the command line arguments the process should have
+        - proc_args_direction(required, String, "include" or "exclude") - "include" for processes with
+            arguments matching proc_args,"exclude" for processes with arguments not matching proc_args
+
+        """
+        data = {}
+        
+        if len(name) < 32:
+            data['template_name'] = name
+        else:
+            raise ValueError("Name provided is too long")
+
+        data['proc_name'] = proc_name
+        data['proc_args'] = proc_args
+        data['proc_args_direction'] = proc_args_direction
+
+        return self._make_api_request('/v4/applications/templates/', data=data, method="POST", json_dump=False)
+        
+    def remove_template(self, template_id):
+        """
+        Removes a template by the specific template id
+        """
+        return self._make_api_request('/v4/applications/templates/{0}/'.format(template_id), method="DELETE")
+        
+
+        
