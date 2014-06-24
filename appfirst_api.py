@@ -413,7 +413,7 @@ class AppFirstApi(object):
 
         #check and add optional arguments
         opt_args = ['active', 'direction', 'threshold', 'interval', 'time_above_threshold', 'num_of_servers',
-                    'threshold_type', 'band_value', 'window_length', 'window_units', 'ip_detail', 'reg_exp']
+                    'threshold_type', 'band_value', 'window_length', 'window_units', 'ip_details', 'reg_exp']
         for arg in opt_args:
             if arg in kwargs:
                 data[arg] = kwargs[arg]
@@ -452,7 +452,7 @@ class AppFirstApi(object):
         params['filter'] = kwargs.get('filter_name', None)
 
         # Send request
-        return self._make_api_request('/server_tags/', params=params)
+        return self._make_api_request('/v4/server_tags/', params=params)
 
     def create_server_tag(self, name, ids):
         """
