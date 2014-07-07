@@ -139,12 +139,12 @@ class AppFirstApi(object):
         # Sanity Checks
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
-        else:
+        elif end is not None:
             params['end'] = time.mktime(end.timetuple())
             
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
-        else:
+        elif start is not None:
             params['start'] = time.mktime(start.timetuple())
             
         if time_step not in ['Minute', 'Hour', 'Day']:
@@ -569,5 +569,10 @@ class AppFirstApi(object):
         """
         return self._make_api_request('/v4/applications/templates/{0}/'.format(template_id), method="DELETE")
         
+    def get_process_data(self, uid):
+	"""
+	Returns data for a specific uid
+	"""
+	return self._make_api_request('/v4/processes/{0}/data/'.format(uid))
 
         
