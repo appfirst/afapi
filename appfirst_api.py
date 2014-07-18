@@ -48,7 +48,7 @@ class AppFirstApi(object):
         headers = kwargs.get('headers', {})
         data = kwargs.get('data', '')
         json_dump = kwargs.get('json_dump', True)
-        
+
         if isinstance(data, dict) and json_dump == True:
             data = json.dumps(data)
 
@@ -62,9 +62,6 @@ class AppFirstApi(object):
             request_method = requests.delete
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
-
-        print ",,,{0} {1}".format(full_url, method)
-
         # Make request and check return status
         r = request_method(full_url, auth=(self.email, self.api_key),
                            params=params, data=data, headers=headers)
@@ -74,9 +71,8 @@ class AppFirstApi(object):
             except ValueError:
                 return r.text
         else:
-            err_msg = "{0}: {1}".format(r.status_code, r.text) if r.text != '' else r.status_code
-            raise exceptions.RequestError("Server returned status code: {0}".format(err_msg))
-
+            err_msg = u"{0}: {1}".format(r.status_code, r.text) if r.text != '' else r.status_code
+            raise exceptions.RequestError(u"Server returned status code: {0}".format(err_msg))
 
 
     # Server APIs
@@ -143,12 +139,12 @@ class AppFirstApi(object):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
             params['end'] = time.mktime(end.timetuple())
-            
+
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
             params['start'] = time.mktime(start.timetuple())
-            
+
         if time_step not in ['Minute', 'Hour', 'Day']:
             raise ValueError("Invalid time_step: {0}".format(time_step))
         else:
@@ -179,7 +175,7 @@ class AppFirstApi(object):
             raise TypeError("end value must be a datetime.datetime instance")
         else:
             params['end'] = time.mktime(end.timetuple())
-            
+
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         else:
@@ -267,12 +263,12 @@ class AppFirstApi(object):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
             params['end'] = time.mktime(end.timetuple())
-            
+
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
             params['start'] = time.mktime(start.timetuple())
-            
+
         return self._make_api_request('/servers/{0}/processes/'.format(host_id), params=params)
 
 
@@ -299,12 +295,12 @@ class AppFirstApi(object):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
             params['end'] = time.mktime(end.timetuple())
-            
+
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
             params['start'] = time.mktime(start.timetuple())
-            
+
         if time_step not in ['Minute', 'Hour', 'Day']:
             raise ValueError("Invalid time_step: {0}".format(time_step))
         elif time_step is not None:
@@ -314,7 +310,7 @@ class AppFirstApi(object):
         return self._make_api_request('/servers/{0}/processes/data/'.format(host_id), params=params)
 
 
-    # alert APIs
+    # Alert APIs
     def get_alerts(self, **kwargs):
         """
         Returns the list of alerts existing.
@@ -335,7 +331,7 @@ class AppFirstApi(object):
         filter_name = kwargs.get('filter_name', None)
         params['filter_id'] = kwargs.get('filter_id', None)
 
-        #sanity check
+        # Sanity check
         if filter_name is not None and filter_name not in filter_types:
             raise ValueError("Filter Name must be {0}".format(repr(filter_types)))
         else:
@@ -363,30 +359,29 @@ class AppFirstApi(object):
 
         http://support.appfirst.com/apis/alerts/#alerts
         """
-        data = {}
-        #add user data as json per documentation
-        data['users'] = users
-        
-        #specify alert type
+        # Add user data as json per documentation
+        data = {'users': users}
+
+        # Specify alert type
         alert_types = ["Process","Application","Log","Polled Data","Server", "Server Tag"]
         if alert_type in alert_types:
             data['type'] = alert_type
         else:
             raise ValueError("Alert type specified must be one of {0}".format(alert_types))
 
-        #check that name is not too long
+        # Check that name is not too long
         if len(name) < 32:
             data['name'] = name
         else:
             raise ValueError("Name provided is too long")
 
-        #check target id for process alert and other alerts
+        # Check target id for process alert and other alerts
         if alert_type == "Process" and len(target_id.split(',')) != 4:
             raise ValueError("Process target id must have 4 parameters, server_id, pid, creationtime, myname")
         else:
             data['target_id'] = target_id
 
-        #build list of trigger types based on alert type
+        # Build list of trigger types based on alert type
         if alert_type == "Process":
             trigger_types = ['Process Termination', 'CPU', 'Memory', 'Average Response Time',
                              'File Read', 'File Write', 'Inbound Network Traffic', 'Outbound Network Traffic',
@@ -407,13 +402,13 @@ class AppFirstApi(object):
                              'Incident Reports', 'Critical Incident Reports', 'Incident Report Content',
                              'File Accessed', 'Registry Accessed', 'Port Accessed']
 
-        #check that trigger type specified is correct for specified alert type
+        # Check that trigger type specified is correct for specified alert type
         if trigger_type in trigger_types:
             data['trigger_type'] = trigger_type
         else:
             raise ValueError("Trigger type is required or provided trigger type is not correct")
 
-        #check and add optional arguments
+        # Check and add optional arguments
         opt_args = ['active', 'direction', 'threshold', 'interval', 'time_above_threshold', 'num_of_servers',
                     'threshold_type', 'band_value', 'window_length', 'window_units', 'ip_details', 'reg_exp']
         for arg in opt_args:
@@ -429,7 +424,6 @@ class AppFirstApi(object):
 
         http://support.appfirst.com/apis/alerts/#alerts
         """
-
         return self._make_api_request('/alerts/{0}'.format(alert_id), method="DELETE")
 
 
@@ -439,22 +433,23 @@ class AppFirstApi(object):
 
         http://support.appfirst.com/apis-v3-alerts/#alertid
         """
-
         return self._make_api_request('/alerts/{0}'.format(alert_id))
 
-    # server tags
+
+    # Server Tags
     def get_all_server_tags(self, **kwargs):
         """
         Lists all available server tags.
 
         http://support.appfirst.com/apis/server-tags/#servertags
         """
-        params = {'limit': kwargs.get('limit', 2500)}
-        params['page'] = kwargs.get('page', 0)
-        params['filter'] = kwargs.get('filter_name', None)
+        params = {
+            'limit': kwargs.get('limit', 2500),
+            'page': kwargs.get('page', 0),
+            'filter': kwargs.get('filter_name', None),
+        }
+        return self._make_api_request('/server_tags/', params=params)
 
-        # Send request
-        return self._make_api_request('/v4/server_tags/', params=params)
 
     def create_server_tag(self, name, ids):
         """
@@ -463,10 +458,12 @@ class AppFirstApi(object):
         - name (required) – the name of the server tag, length must be 1 – 256 characters.
         - servers (required) – a list of server IDs.
         """
-        data = {}
-        data['name'] = name
-        data['servers'] = ids
-        return self._make_api_request('server_tags/', data=data, method="POST", json_dump=False)
+        data = {
+            'name': name,
+            'servers': ids,
+        }
+        return self._make_api_request('/server_tags/', data=data, method="POST", json_dump=False)
+
 
     def delete_server_tag(self, tag_id):
         """
@@ -482,11 +479,13 @@ class AppFirstApi(object):
         """
         return self._make_api_request('/applications/')
 
+
     def get_application(self, application_id):
         """
         Returns a dictionary of details for a specific application matching application_id
         """
         return self._make_api_request('/applications/{0}/'.format(application_id))
+
 
     def add_application(self, name, source_type, template_id, **kwargs):
         """
@@ -499,10 +498,9 @@ class AppFirstApi(object):
         - template_id(required, integer) - application template id
 
         Optional arguments are adding at the end
-
         """
         data = {}
-        
+
         if len(name) < 32:
             data['app_name'] = name
         else:
@@ -519,27 +517,31 @@ class AppFirstApi(object):
 
         data['template_id'] = template_id
 
-        return self._make_api_request('/v4/applications/', data=data, method="POST", json_dump=False)
+        return self._make_api_request('/applications/', data=data, method="POST", json_dump=False)
+
 
     def remove_application(self, application_id):
         """
        Removes an application by specific application id
 
         """
-        return self._make_api_request('/v4/applications/{0}'.format(application_id), method="DELETE")
+        return self._make_api_request('/applications/{0}'.format(application_id), method="DELETE")
 
-    #Templates
+
+    # Templates
     def get_templates(self):
         """
         Returns a dictionary for all defined templates
         """
         return self._make_api_request('/v4/applications/templates/')
 
+
     def get_template(self, template_id):
         """
         Returns a dictionary of details for a specific template matching template_id
         """
         return self._make_api_request('/v4/applications/templates/{0}'.format(template_id))
+
 
     def add_template(self, name, proc_name, proc_args, proc_args_direction):
         """
@@ -550,18 +552,17 @@ class AppFirstApi(object):
         - proc_args(required, regex String) - the command line arguments the process should have
         - proc_args_direction(required, String, "include" or "exclude") - "include" for processes with
             arguments matching proc_args,"exclude" for processes with arguments not matching proc_args
-
         """
-        data = {}
-        
+        data = {
+            'proc_name': proc_name,
+            'proc_args': proc_args,
+            'proc_args_direction': proc_args_direction,
+        }
+
         if len(name) < 32:
             data['template_name'] = name
         else:
             raise ValueError("Name provided is too long")
-
-        data['proc_name'] = proc_name
-        data['proc_args'] = proc_args
-        data['proc_args_direction'] = proc_args_direction
 
         return self._make_api_request('/v4/applications/templates/', data=data, method="POST", json_dump=False)
 
