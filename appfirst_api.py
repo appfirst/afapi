@@ -62,7 +62,9 @@ class AppFirstApi(object):
             request_method = requests.delete
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
-        
+
+        print ",,,{0} {1}".format(full_url, method)
+
         # Make request and check return status
         r = request_method(full_url, auth=(self.email, self.api_key),
                            params=params, data=data, headers=headers)
@@ -85,7 +87,7 @@ class AppFirstApi(object):
         http://support.appfirst.com/apis/servers/#servers
         """
         params = {'hostname': hostname} if hostname else {}
-        return self._make_api_request('/servers/', params=params)
+	return self._make_api_request('/servers/', params=params)
 
 
     def get_server(self, host_id):
@@ -521,7 +523,7 @@ class AppFirstApi(object):
 
     def remove_application(self, application_id):
         """
-        Removes an application by specific application id
+       Removes an application by specific application id
 
         """
         return self._make_api_request('/v4/applications/{0}'.format(application_id), method="DELETE")
@@ -562,17 +564,40 @@ class AppFirstApi(object):
         data['proc_args_direction'] = proc_args_direction
 
         return self._make_api_request('/v4/applications/templates/', data=data, method="POST", json_dump=False)
-        
+
     def remove_template(self, template_id):
         """
         Removes a template by the specific template id
         """
-        return self._make_api_request('/v4/applications/templates/{0}/'.format(template_id), method="DELETE")
-        
-    def get_process_data(self, uid):
-	"""
-	Returns data for a specific uid
-	"""
-	return self._make_api_request('/v4/processes/{0}/data/'.format(uid))
 
-        
+        return self._make_api_request('/v4/applications/templates/{0}/'.format(template_id), method="DELETE")
+
+    def get_process_data(self, uid, **kwargs):
+        """
+        Returns data for a specific uid
+        """
+
+        params = {'num': kwargs.get('num', 1)}
+        end = kwargs.get('end', None)
+        start = kwargs.get('start', None)
+        time_step = kwargs.get('time_step', 'Minute')
+
+        return self._make_api_request('/v4/processes/{0}/data/'.format(uid), params = params)
+
+    def get_logs(self, **kwargs):
+
+        params = {'num': kwargs.get('num', 1)}
+        end = kwargs.get('end', None)
+        start = kwargs.get('start', None)
+        time_step = kwargs.get('time_step', 'Minute')
+
+        return self._make_api_request('/logs/', params = params)
+
+    def get_log_data(self, log_id, **kwargs):
+
+        params = {'num': kwargs.get('num', 1)}
+        end = kwargs.get('end', None)
+        start = kwargs.get('start', None)
+        time_step = kwargs.get('time_step', 'Minute')
+
+        return self._make_api_request('/logs/{0}/data'.format(log_id), params = params)
