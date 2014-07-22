@@ -62,6 +62,7 @@ class AppFirstApi(object):
             request_method = requests.delete
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
+        
         # Make request and check return status
         r = request_method(full_url, auth=(self.email, self.api_key),
                            params=params, data=data, headers=headers)
@@ -104,7 +105,11 @@ class AppFirstApi(object):
         if not isinstance(data, dict):
             raise TypeError("Data must be a dictionary")
 
-        return self._make_api_request('/servers/{0}/'.format(host_id), data=data)
+        data_string = ""
+        for key, item in data.iteritems():            
+            data_string += "{0}={1}&".format(key, item)
+
+        return self._make_api_request('/servers/{0}/'.format(host_id), data=data_string, method='PUT')
 
 
     def delete_server(self, host_id):
@@ -173,12 +178,12 @@ class AppFirstApi(object):
         # Sanity Checks
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
-        else:
+        elif end is not None:
             params['end'] = time.mktime(end.timetuple())
 
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
-        else:
+        elif start is not None:
             params['start'] = time.mktime(start.timetuple())
 
         return self._make_api_request('/servers/{0}/outages/'.format(host_id))
@@ -228,7 +233,7 @@ class AppFirstApi(object):
             raise TypeError("new_tags must be a list")
 
         params = {'server_tags': json.dumps(new_tags)}
-        return self._make_api_request('/servers/{0}/tags/'.format(host_id), params=params)
+        return self._make_api_request('/servers/{0}/tags/'.format(host_id), method='PUT', params=params)
 
 
     def trigger_server_app_auto_detect(self, host_id):
@@ -477,15 +482,20 @@ class AppFirstApi(object):
         """
         Returns a dictionary of details for all definined applications.
         """
-        return self._make_api_request('/applications/')
+        return self._make_api_request('/v4/applications/')
 
 
     def get_application(self, application_id):
         """
         Returns a dictionary of details for a specific application matching application_id
         """
-        return self._make_api_request('/applications/{0}/'.format(application_id))
+        return self._make_api_request('/v4/applications/{0}/'.format(application_id))
 
+    def get_appliation_processes(self, application_id):
+        """
+        Returns a dictionary of processes used by specific application id
+        """
+        return self._make_api_request('/v4/applications/{0}/processes'.format(application_id))
 
     def add_application(self, name, source_type, template_id, **kwargs):
         """
@@ -516,16 +526,16 @@ class AppFirstApi(object):
             raise ValueError("Source Type must be either 'servers' or 'set' to create application")
 
         data['template_id'] = template_id
-
-        return self._make_api_request('/applications/', data=data, method="POST", json_dump=False)
+        
+        return self._make_api_request('/v4/applications/', data=data, method="POST", json_dump=False)
 
 
     def remove_application(self, application_id):
         """
-       Removes an application by specific application id
+        Removes an application by specific application id
 
         """
-        return self._make_api_request('/applications/{0}'.format(application_id), method="DELETE")
+        return self._make_api_request('/v4/applications/{0}'.format(application_id), method="DELETE")
 
 
     # Templates
@@ -577,28 +587,128 @@ class AppFirstApi(object):
         """
         Returns data for a specific uid
         """
-
         params = {'num': kwargs.get('num', 1)}
         end = kwargs.get('end', None)
         start = kwargs.get('start', None)
         time_step = kwargs.get('time_step', 'Minute')
+
+        # Sanity Checks
+        if end is not None and not isinstance(end, datetime.datetime):
+            raise TypeError("end value must be a datetime.datetime instance")
+        elif end is not None:
+            params['end'] = time.mktime(end.timetuple())
+
+        if start is not None and not isinstance(start, datetime.datetime):
+            raise TypeError("start value must be a datetime.datetime instance")
+        elif start is not None:
+            params['start'] = time.mktime(start.timetuple())
+
+        if time_step not in ['Minute', 'Hour', 'Day']:
+            raise ValueError("Invalid time_step: {0}".format(time_step))
+        else:
+            params['time_step'] = time_step
+        
 
         return self._make_api_request('/v4/processes/{0}/data/'.format(uid), params = params)
 
     def get_logs(self, **kwargs):
 
-        params = {'num': kwargs.get('num', 1)}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-        time_step = kwargs.get('time_step', 'Minute')
+        params = {'limit': kwargs.get('num', 1)}
+        params['page'] = kwargs.get('page', 0)
 
         return self._make_api_request('/logs/', params = params)
 
+    def get_logs(self, log_id, **kwargs):
+
+        params = {'limit': kwargs.get('num', 1)}
+        params['page'] = kwargs.get('page', 0)
+        
+        
+
+        return self._make_api_request('/logs/{0}'.format(log_id), params = params)
+
     def get_log_data(self, log_id, **kwargs):
 
-        params = {'num': kwargs.get('num', 1)}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-        time_step = kwargs.get('time_step', 'Minute')
+        params = {'limit': kwargs.get('num', 1)}
+        params['page'] = kwargs.get('page', 0)
+        
 
         return self._make_api_request('/logs/{0}/data'.format(log_id), params = params)
+
+    def get_user_profiles(self, **kwargs):
+        """
+        Lists all available user profiles or creates a new one. See above for the attributes each user profile has.
+        
+        http://support.appfirst.com/apis/user-profiles/#userprofiles
+        """
+
+        params = {'limit': kwargs.get('num', 2500)}
+        params['page'] = kwargs.get('page', 0)
+        if 'email' in kwargs: params['email'] = kwargs.get('email')
+
+        return self._make_api_request('/user_profiles/', params = params)
+
+    def get_user_profile(self, user_id, **kwargs):
+        """
+        View a user user_profile
+        http://support.appfirst.com/apis/user-profiles/#userprofilesid
+        """
+
+        return self._make_api_request('/user_profiles/{0}'.format(user_id))
+
+    def create_user_profile(self, first_name, last_name, email, country_code, phone_number):
+        """
+        Create a new user profile for this tenant.
+
+        Arguments
+
+        first_name (required, String, length:1-30) – the first name of the new user profile.
+        last_name (required, String, length:1-30) – the last name of the new user profile.
+        email (required, String) – email address of this profile, it must be unique for each user profile. A valid email format is required. Once the user is successfully created, a confirmation email will be sent to the new user.
+        country_code (required, int) – ISO country code for this user’s phone, required for sending SMS message.
+        phone_number (required, int) – phone number of this user, required for sending SMS message.
+
+        http://support.appfirst.com/apis/user-profiles/#userprofiles
+        """
+
+        if len(first_name)>30 or len(last_name)>30:
+            raise ValueError("Name provided is too long, must be length 1-30")
+
+        if type(country_code)!= int:
+            raise ValueError("Country code must be int")
+
+        if type(phone_number)!= int:
+             raise ValueError("Phone number must be int")
+
+        data = {'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+                'country_code': country_code,
+                'phone_number': phone_number}
+
+        return self._make_api_request('/user_profiles/', data = data, method='POST', json_dump=False)
+
+
+    def update_user_profile(self, user_id, data):
+        """
+        Update the information for this user.
+        http://support.appfirst.com/apis/user-profiles/#userprofilesid
+        """
+
+        if not isinstance(data, dict):
+            raise TypeError("Data must be a dictionary")
+
+        data_string = ""
+        for key, item in data.iteritems():            
+            data_string += "{0}={1}&".format(key, item)
+        print data_string
+        
+        return self._make_api_request('/user_profiles/{0}/'.format(user_id), data = data_string, method='PUT')
+
+    def delete_user_profile(self, user_id):
+        """
+        Delete a user profile. Account owner can NOT be deleted.
+        http://support.appfirst.com/apis/user-profiles/#userprofilesid
+        """
+
+        return self._make_api_request('user_profiles/{0}/'.format(user_id), method='DELETE')
