@@ -417,8 +417,7 @@ class AppFirstApi(object):
         opt_args = ['active', 'direction', 'threshold', 'interval', 'time_above_threshold', 'num_of_servers',
                     'threshold_type', 'band_value', 'window_length', 'window_units', 'ip_details', 'reg_exp']
         for arg in opt_args:
-            if arg in kwargs:
-                data[arg] = kwargs[arg]
+            if arg in kwargs: data[arg] = kwargs[arg]
 
         return self._make_api_request('/alerts/', data=data, method="POST",  json_dump = False )
 
@@ -469,13 +468,17 @@ class AppFirstApi(object):
         }
         return self._make_api_request('/server_tags/', data=data, method="POST", json_dump=False)
 
-
     def delete_server_tag(self, tag_id):
         """
         Deletes a server tag
         """
         return self._make_api_request('/server_tags/{0}'.format(tag_id), method="DELETE")
-
+	
+    def get_server_tag(self, tag_id):
+		"""
+		Returns single server tag
+		"""
+		return self._make_api_request('/server_tags/{0}'.format(tag_id))
 
     # Applications
     def get_applications(self):
@@ -701,7 +704,6 @@ class AppFirstApi(object):
         data_string = ""
         for key, item in data.iteritems():            
             data_string += "{0}={1}&".format(key, item)
-        print data_string
         
         return self._make_api_request('/user_profiles/{0}/'.format(user_id), data = data_string, method='PUT')
 
@@ -711,4 +713,35 @@ class AppFirstApi(object):
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
 
-        return self._make_api_request('user_profiles/{0}/'.format(user_id), method='DELETE')
+        return self._make_api_request('/user_profiles/{0}/'.format(user_id), method='DELETE')
+        
+    def get_maintenance_windows(self, **kwargs):
+        """
+        List all available maintenance windows.
+        http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
+        """
+        params = {'limit': kwargs.get('num', 2500)}
+        params['page'] = kwargs.get('page', 0)
+        
+        return self._make_api_request('/maintenance_windows/', params = params)
+        
+    def create_maintenance_window(self, start, end, servers, **kwargs):
+        """
+        Create a new maintenance window.
+
+        start (required) – start time in UTC time zone (ex: yyyy-mm-dd 24hr:mm).
+        end (required) – end time in UTC time zone (ex: yyyy-mm-dd 24hr:mm).
+        reason (optional)- reason for maintenance window.
+        servers (required) – a list of server IDs.
+        
+        http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
+        """
+        if type(servers) is not list: raise("severs argument must be provided as list")
+        
+        data = {'start': start, 'end': end, 'servers': servers}
+        
+        if 'reason' in kwargs: data['reason'] = kwargs['reason']
+        
+        return self._make_api_request('/maintenance_windows/', data=data, method="POST", json_dump=False)
+    
+    #def delete_maintenance_window(self, 
