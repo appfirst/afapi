@@ -499,6 +499,31 @@ class AppFirstApi(object):
         Returns a dictionary of processes used by specific application id
         """
         return self._make_api_request('/v4/applications/{0}/processes'.format(application_id))
+    
+    def get_application_data(self, app_id, **kwargs):
+        """
+        Gets data for the given application. It gets up to “num” points starting from “end” and going back “start.”
+        
+        http://support.appfirst.com/apis/applications/#applicationiddata
+        """
+        
+        params = {'num': kwargs.get('num', None)}
+        params['end'] = kwargs.get('end', None)
+        params['start'] = kwargs.get('start', None)
+        params['time_step'] = kwargs.get('time_step', None)
+        
+        return self._make_api_request('/applications/{0}/data/'.format(app_id), params = params)
+        
+    def get_application_detail(self, app_id, **kwargs):
+        """
+        Retrieves historical detail data for a given application.
+        
+        http://support.appfirst.com/apis/applications/#applicationiddetail
+        """
+        
+        params = {'time': kwargs.get('time', None)}
+        
+        return self._make_api_request('/applications/{0}/detail/'.format(app_id), params = params)
 
     def add_application(self, name, source_type, template_id, **kwargs):
         """
@@ -614,27 +639,49 @@ class AppFirstApi(object):
 
         return self._make_api_request('/v4/processes/{0}/data/'.format(uid), params = params)
 
+    def get_process_detail(self, uid, **kwargs):
+        """
+        Gets data for the given server.
+        
+        http://support.appfirst.com/apis/processes/#processesdetail
+        """
+        
+        if 'time' in kwargs: params = {'time': kwargs['time']}
+        
+        return self._make_api_request('/processes/{0}/detail/'.format(uid), params = params)
     def get_logs(self, **kwargs):
+        """
+        Returns the list of logs for this account.
 
+        http://support.appfirst.com/apis/logs/#logs
+        """
+        
         params = {'limit': kwargs.get('num', 1)}
         params['page'] = kwargs.get('page', 0)
 
         return self._make_api_request('/logs/', params = params)
 
-    def get_logs(self, log_id, **kwargs):
+    def get_log(self, log_id, **kwargs):
+        """
+        View a log item.
 
+        http://support.appfirst.com/apis/logs/#logid
+        """
+        
         params = {'limit': kwargs.get('num', 1)}
         params['page'] = kwargs.get('page', 0)
-        
-        
 
         return self._make_api_request('/logs/{0}'.format(log_id), params = params)
 
     def get_log_data(self, log_id, **kwargs):
-
+        """
+        Retrieves summary data for the given log.
+        
+        http://support.appfirst.com/apis/logs/#logiddata
+        """
+        
         params = {'limit': kwargs.get('num', 1)}
         params['page'] = kwargs.get('page', 0)
-        
 
         return self._make_api_request('/logs/{0}/data'.format(log_id), params = params)
 
@@ -710,14 +757,25 @@ class AppFirstApi(object):
     def delete_user_profile(self, user_id):
         """
         Delete a user profile. Account owner can NOT be deleted.
+        
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
 
         return self._make_api_request('/user_profiles/{0}/'.format(user_id), method='DELETE')
         
+    def get_maintenance_window(self, window_id):
+        """
+        List all available maintenance windows.
+        
+        http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
+        """
+        
+        return self._make_api_request('/maintenance_windows/{0}'.format(window_id))
+    
     def get_maintenance_windows(self, **kwargs):
         """
         List all available maintenance windows.
+        
         http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
         """
         params = {'limit': kwargs.get('num', 2500)}
@@ -744,4 +802,68 @@ class AppFirstApi(object):
         
         return self._make_api_request('/maintenance_windows/', data=data, method="POST", json_dump=False)
     
-    #def delete_maintenance_window(self, 
+    def delete_maintenance_window(self, window_id):
+        """
+        Removes maintenance window
+        """
+        
+        return self._make_api_request('/maintenance_windows/{0}'.format(window_id), method='DELETE')
+        
+    def update_maintenance_window(self, window_id, start, end, servers, **kwargs):
+        """
+        Update maintenance window with new information
+        """
+        if type(servers) is not list: raise("severs argument must be provided as list")
+        
+        data = {'start': start, 'end': end, 'servers': servers}
+        
+        if 'reason' in kwargs: data['reason'] = kwargs['reason']
+        
+        return self._make_api_request('/maintenance_windows/{0}'.format(window_id), data = data, method='PUT')
+        
+    def create_mobile_device(self, brand, uid, **kwargs):
+        """
+        Create a new mobile device for this user. Requires the brand and uid parameters.
+
+        It takes an additional boolean parameter “subscribe_all” that indicates whether the new device 
+        should automatically be subscribed to all alerts for push notifications, or none. 
+        
+        http://support.appfirst.com/apis/mobile-devices/#mobiledevices
+        """
+        
+        data = {'brand': brand, 'uid': uid}
+        
+        if 'subscribe_all' in kwargs: data['subscribe_all'] = kwargs['subscribe_all']
+        
+        return self._make_api_request('/mobile-devices/', data = data, method='POST')
+        
+    def get_alert_histories(self, **kwargs):
+        """
+        Lists recent alert histories.
+        
+        http://support.appfirst.com/apis/alert-histories/#alerthistories
+        """
+        params = {'limit': kwargs.get('limit', None)}
+        params['page'] = kwargs.get('page', None)
+        params['start'] = kwargs.get('start', None)
+        params['filter'] = kwargs.get('filter', None)
+        
+        return self._make_api_request('/alert-histories/', params = params)
+    
+    def get_alert_history(self, history_id):
+        """
+        View an alert history.
+
+        http://support.appfirst.com/apis/alert-histories/#alerthistories
+        """
+        
+        return self._make_api_request('/alert-histories/{0}'.format(history_id))
+        
+    def get_alert_history_message(self, hist_id):
+        """
+        View the email message content of an alert history.
+        
+        http://support.appfirst.com/apis/alert-histories/#alerthistories
+        """
+        
+        return self._make_api_request('/alert-histories/{0}/message/'.format(hist_id))
