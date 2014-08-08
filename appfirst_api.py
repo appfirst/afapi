@@ -867,3 +867,61 @@ class AppFirstApi(object):
         """
         
         return self._make_api_request('/alert-histories/{0}/message/'.format(hist_id))
+
+    def get_buckets(self, **kwargs):
+        """
+        Lists all available bucket data items.
+        
+        http://support.appfirst.com/apis/buckets/#buckets
+        """
+        params = {'limit': kwargs.get('limit', None)}
+        params['page'] = kwargs.get('page', None)
+        
+        return self._make_api_request('/buckets/', params = params)
+        
+    def get_bucket_data(self, bucket_id, **kwargs):
+        """
+        Retrieves historical data for the given bucket. 
+        
+        http://support.appfirst.com/apis/buckets/#bucketid
+        """
+        params = {'num': kwargs.get('num', 1)}
+        end = kwargs.get('end', None)
+        start = kwargs.get('start', None)
+        time_step = kwargs.get('time_step', 'Minute')
+
+        # Sanity Checks
+        if end is not None and not isinstance(end, datetime.datetime):
+            raise TypeError("end value must be a datetime.datetime instance")
+        elif end is not None:
+            params['end'] = time.mktime(end.timetuple())
+
+        if start is not None and not isinstance(start, datetime.datetime):
+            raise TypeError("start value must be a datetime.datetime instance")
+        elif start is not None:
+            params['start'] = time.mktime(start.timetuple())
+
+        if time_step not in ['Minute', 'Hour', 'Day']:
+            raise ValueError("Invalid time_step: {0}".format(time_step))
+        else:
+            params['time_step'] = time_step
+            
+        return self._make_api_request('/buckets/{0}/data/'.format(bucket_id))
+        
+    def get_bucket(self, bucket_id):
+        """
+        View or edit a bucket.
+        
+        http://support.appfirst.com/apis/buckets/#bucketid
+        """
+        
+        return self._make_api_request('/buckets/{0}'.format(bucket_id))
+        
+    def delete_bucket(self, bucket_id):
+        """
+        View or edit a bucket.
+        
+        http://support.appfirst.com/apis/buckets/#bucketid
+        """
+        
+        return self._make_api_request('/buckets/{0}/'.format(bucket_id), method='DELETE')
