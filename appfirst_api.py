@@ -14,7 +14,8 @@ try:
 except ImportError:
     import json
 
-from . import requests
+import requests
+
 from . import exceptions
 
 
