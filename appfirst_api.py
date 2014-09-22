@@ -70,9 +70,6 @@ class AppFirstApi(object):
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
 
-        #print the url for unit test reference
-        #print("{0}".format(full_url))
-
         # Make request and check return status
         r = request_method(full_url, auth=(self.email, self.api_key),
                            params=params, data=data, headers=headers,
@@ -109,18 +106,20 @@ class AppFirstApi(object):
 
     def update_server(self, host_id, data):
         """
-        Edit a server. Data argument should be a dict like {'nickname': 'new_nick'}
+        Edit a server.
+        Data argument should be a dict like {'nickname': 'new_nick'}
 
         http://support.appfirst.com/apis/servers/#serverid
         """
         if not isinstance(data, dict):
             raise TypeError("Data must be a dictionary")
 
-        data_string = ""
+        data_string = ''
         for key, item in data.iteritems():
-            data_string += "{0}={1}&".format(key, item)
+            data_string += '{0}={1}&'.format(key, item)
 
-        return self._make_api_request('/servers/{0}/'.format(host_id), data=data_string, method='PUT')
+        return self._make_api_request('/servers/{0}/'.format(host_id),
+                                      data=data_string, method='PUT')
 
 
     def delete_server(self, host_id):
@@ -379,7 +378,7 @@ class AppFirstApi(object):
         data = {'users': users}
 
         # Specify alert type
-        alert_types = ["Process","Application","Log","Polled Data","Server", "Server Tag"]
+        alert_types = ["Process", "Application", "Log", "Polled Data", "Server", "Server Tag"]
         if alert_type in alert_types:
             data['type'] = alert_type
         else:
@@ -399,24 +398,32 @@ class AppFirstApi(object):
 
         # Build list of trigger types based on alert type
         if alert_type == "Process":
-            trigger_types = ['Process Termination', 'CPU', 'Memory', 'Average Response Time',
-                             'File Read', 'File Write', 'Inbound Network Traffic', 'Outbound Network Traffic',
-                             'Network Connections', 'Threads', 'Files', 'Registries', 'Page Faults',
-                             'Incident Reports', 'Critical Incident Reports', 'Incident Report Content',
-                             'File Accessed', 'Registry Accessed', 'Port Accessed']
-        elif alert_type == "Server" or alert_type=="Server Tag":
-            trigger_types = ['Server Down', 'CPU', 'Memory', 'Average Response Time', 'Disk', 'Disk Busy',
-                             'Threads', 'Page Faults', 'Processes']
+            trigger_types = [
+                'Process Termination', 'CPU', 'Memory', 'Average Response Time',
+                'File Read', 'File Write', 'Inbound Network Traffic', 'Outbound Network Traffic',
+                'Network Connections', 'Threads', 'Files', 'Registries', 'Page Faults',
+                'Incident Reports', 'Critical Incident Reports', 'Incident Report Content',
+                'File Accessed', 'Registry Accessed', 'Port Accessed'
+            ]
+        elif alert_type == "Server" or alert_type == "Server Tag":
+            trigger_types = [
+                'Server Down', 'CPU', 'Memory', 'Average Response Time', 'Disk',
+                'Disk Busy', 'Threads', 'Page Faults', 'Processes',
+            ]
         elif alert_type == "Log":
-            trigger_types = ['Number of Info', 'Number of Warning', 'Number of Critical', 'Log Content']
+            trigger_types = [
+                'Number of Info', 'Number of Warning', 'Number of Critical', 'Log Content'
+            ]
         elif alert_type == "Polled Data":
             trigger_types = ['Nagios']
         elif alert_type == "Application":
-            trigger_types = ['Processes', 'Process Termination', 'CPU', 'Memory', 'Average Response Time',
-                             'File Read', 'File Write', 'Inbound Network Traffic', 'Outbound Network Traffic',
-                             'Network Connections', 'Threads', 'Files', 'Registries', 'Page Faults',
-                             'Incident Reports', 'Critical Incident Reports', 'Incident Report Content',
-                             'File Accessed', 'Registry Accessed', 'Port Accessed']
+            trigger_types = [
+                'Processes', 'Process Termination', 'CPU', 'Memory', 'Average Response Time',
+                'File Read', 'File Write', 'Inbound Network Traffic', 'Outbound Network Traffic',
+                'Network Connections', 'Threads', 'Files', 'Registries', 'Page Faults',
+                'Incident Reports', 'Critical Incident Reports', 'Incident Report Content',
+                'File Accessed', 'Registry Accessed', 'Port Accessed',
+            ]
 
         # Check that trigger type specified is correct for specified alert type
         if trigger_type in trigger_types:
@@ -425,8 +432,11 @@ class AppFirstApi(object):
             raise ValueError("Trigger type is required or provided trigger type is not correct")
 
         # Check and add optional arguments
-        opt_args = ['active', 'direction', 'threshold', 'interval', 'time_above_threshold', 'num_of_servers',
-                    'threshold_type', 'band_value', 'window_length', 'window_units', 'ip_details', 'reg_exp']
+        opt_args = [
+            'active', 'direction', 'threshold', 'interval', 'time_above_threshold',
+            'num_of_servers', 'threshold_type', 'band_value', 'window_length',
+            'window_units', 'ip_details', 'reg_exp',
+        ]
         for arg in opt_args:
             if arg in kwargs: data[arg] = kwargs[arg]
 
@@ -478,6 +488,7 @@ class AppFirstApi(object):
             'servers': ids,
         }
         return self._make_api_request('/server_tags/', data=data, method="POST", json_dump=False)
+
 
     def delete_server_tag(self, tag_id):
         """
@@ -537,7 +548,6 @@ class AppFirstApi(object):
         params = {'time': kwargs.get('time', None)}
         return self._make_api_request('/applications/{0}/detail/'.format(app_id), params=params)
 
-
     def add_application(self, name, source_type, template_id, **kwargs):
         """
         Creates an application based on the documented requirements:
@@ -551,7 +561,6 @@ class AppFirstApi(object):
         Optional arguments are adding at the end
         """
         data = {}
-
         if len(name) < 32:
             data['app_name'] = name
         else:
@@ -573,7 +582,6 @@ class AppFirstApi(object):
     def remove_application(self, application_id):
         """
         Removes an application by specific application id
-
         """
         return self._make_api_request('/applications/{0}'.format(application_id), method="DELETE")
 
@@ -684,6 +692,7 @@ class AppFirstApi(object):
         }
         return self._make_api_request('/logs/{0}'.format(log_id), params=params)
 
+
     def get_log_data(self, log_id, **kwargs):
         """
         Retrieves summary data for the given log.
@@ -695,6 +704,7 @@ class AppFirstApi(object):
             'page': kwargs.get('page', 0),
         }
         return self._make_api_request('/logs/{0}/data'.format(log_id), params=params)
+
 
     def get_user_profiles(self, **kwargs):
         """
@@ -711,12 +721,14 @@ class AppFirstApi(object):
 
         return self._make_api_request('/user_profiles/', params=params)
 
+
     def get_user_profile(self, user_id, **kwargs):
         """
         View a user user_profile
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
         return self._make_api_request('/user_profiles/{0}'.format(user_id))
+
 
     def create_user_profile(self, first_name, last_name, email, country_code, phone_number):
         """
@@ -726,8 +738,9 @@ class AppFirstApi(object):
 
         first_name (required, String, length:1-30) – the first name of the new user profile.
         last_name (required, String, length:1-30) – the last name of the new user profile.
-        email (required, String) – email address of this profile, it must be unique for each user profile.
-            A valid email format is required. Once the user is successfully created, a confirmation email will be sent to the new user.
+        email (required, String) – email address of this profile, it must be unique for each user profile. 
+                                   A valid email format is required. Once the user is successfully created,
+                                   a confirmation email will be sent to the new user.
         country_code (required, int) – ISO country code for this user’s phone, required for sending SMS message.
         phone_number (required, int) – phone number of this user, required for sending SMS message.
 
@@ -805,11 +818,13 @@ class AppFirstApi(object):
 
         http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
         """
-        if type(servers) is not list:
-            raise("severs argument must be provided as list")
-
-        data = {'start': start, 'end': end, 'servers': servers}
-
+        if not isinstance(servers, list):
+            raise TypeError("severs argument must be provided as list")
+        data = {
+            'start': start,
+            'end': end,
+            'servers': servers,
+        }
         if 'reason' in kwargs:
             data['reason'] = kwargs['reason']
 
@@ -880,6 +895,7 @@ class AppFirstApi(object):
         http://support.appfirst.com/apis/alert-histories/#alerthistories
         """
         return self._make_api_request('/alert-histories/{0}/message/'.format(hist_id))
+
 
     def get_buckets(self, **kwargs):
         """
