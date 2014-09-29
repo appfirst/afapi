@@ -25,10 +25,11 @@ class AppFirstApi(object):
     different forms of data.
     """
 
-    def __init__(self, email, api_key, base_url='https://wwws.appfirst.com/api'):
+    def __init__(self, email, api_key, base_url='https://wwws.appfirst.com/api', use_strict_ssl=True):
         self.email = email
         self.api_key = api_key
         self.base_url = base_url
+        self.use_strict_ssl = use_strict_ssl
 
 
     # Helper methods
@@ -64,9 +65,12 @@ class AppFirstApi(object):
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
         
+        #print the url for unit test reference
+        #print("{0}".format(full_url))
+
         # Make request and check return status
         r = request_method(full_url, auth=(self.email, self.api_key),
-                           params=params, data=data, headers=headers)
+                           params=params, data=data, headers=headers, verify=self.use_strict_ssl)
         if r.status_code == requests.codes.ok:
             try:
                 return r.json()
