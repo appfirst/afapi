@@ -499,7 +499,7 @@ class AppFirstApi(object):
         """
         return self._make_api_request('/v4/applications/{0}/'.format(application_id))
 
-    def get_appliation_processes(self, application_id):
+    def get_application_processes(self, application_id):
         """
         Returns a dictionary of processes used by specific application id
         """
