@@ -25,11 +25,13 @@ class AppFirstApi(object):
     different forms of data.
     """
 
-    def __init__(self, email, api_key, base_url='https://wwws.appfirst.com/api', use_strict_ssl=True):
+    def __init__(self, email, api_key, base_url='https://wwws.appfirst.com/api',
+                 use_strict_ssl=True, version=4):
         self.email = email
         self.api_key = api_key
         self.base_url = base_url
         self.use_strict_ssl = use_strict_ssl
+        self.version = version
 
 
     # Helper methods
@@ -41,13 +43,16 @@ class AppFirstApi(object):
             - method:  defaults to 'GET'
             - params:  defaults to {}
             - data:    defaults to '' (for PUT requests)
-            - headers: defaults to {}
+            - headers: defaults to {'accept': 'application/json; version=self.version'}
             - json_dump: defaults to True. Whether or not to dump data dictionary.
         """
         full_url = self.base_url + url
         method = kwargs.get('method', 'GET')
         params = kwargs.get('params', {})
-        headers = kwargs.get('headers', {})
+        headers = {
+            'accept': 'application/json; version={0}'.format(self.version),
+        }
+        headers.update(kwargs.get('headers', {}))
         data = kwargs.get('data', '')
         json_dump = kwargs.get('json_dump', True)
 
@@ -64,13 +69,14 @@ class AppFirstApi(object):
             request_method = requests.delete
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
-        
+
         #print the url for unit test reference
         #print("{0}".format(full_url))
 
         # Make request and check return status
         r = request_method(full_url, auth=(self.email, self.api_key),
-                           params=params, data=data, headers=headers, verify=self.use_strict_ssl)
+                           params=params, data=data, headers=headers,
+                           verify=self.use_strict_ssl)
         if r.status_code == requests.codes.ok:
             try:
                 return r.json()
@@ -89,7 +95,7 @@ class AppFirstApi(object):
         http://support.appfirst.com/apis/servers/#servers
         """
         params = {'hostname': hostname} if hostname else {}
-	return self._make_api_request('/servers/', params=params)
+        return self._make_api_request('/servers/', params=params)
 
 
     def get_server(self, host_id):
@@ -111,7 +117,7 @@ class AppFirstApi(object):
             raise TypeError("Data must be a dictionary")
 
         data_string = ""
-        for key, item in data.iteritems():            
+        for key, item in data.iteritems():
             data_string += "{0}={1}&".format(key, item)
 
         return self._make_api_request('/servers/{0}/'.format(host_id), data=data_string, method='PUT')
@@ -478,57 +484,59 @@ class AppFirstApi(object):
         Deletes a server tag
         """
         return self._make_api_request('/server_tags/{0}'.format(tag_id), method="DELETE")
-	
+
     def get_server_tag(self, tag_id):
-		"""
-		Returns single server tag
-		"""
-		return self._make_api_request('/server_tags/{0}'.format(tag_id))
+        """
+        Returns single server tag
+        """
+        return self._make_api_request('/server_tags/{0}'.format(tag_id))
 
     # Applications
     def get_applications(self):
         """
         Returns a dictionary of details for all definined applications.
         """
-        return self._make_api_request('/v4/applications/')
+        return self._make_api_request('/applications/')
 
 
     def get_application(self, application_id):
         """
         Returns a dictionary of details for a specific application matching application_id
         """
-        return self._make_api_request('/v4/applications/{0}/'.format(application_id))
+        return self._make_api_request('/applications/{0}/'.format(application_id))
+
 
     def get_application_processes(self, application_id):
         """
         Returns a dictionary of processes used by specific application id
         """
-        return self._make_api_request('/v4/applications/{0}/processes'.format(application_id))
-    
+        return self._make_api_request('/applications/{0}/processes'.format(application_id))
+
+
     def get_application_data(self, app_id, **kwargs):
         """
         Gets data for the given application. It gets up to “num” points starting from “end” and going back “start.”
-        
+
         http://support.appfirst.com/apis/applications/#applicationiddata
         """
-        
-        params = {'num': kwargs.get('num', None)}
-        params['end'] = kwargs.get('end', None)
-        params['start'] = kwargs.get('start', None)
-        params['time_step'] = kwargs.get('time_step', None)
-        
-        return self._make_api_request('/applications/{0}/data/'.format(app_id), params = params)
-        
+        params = {
+            'num': kwargs.get('num', None),
+            'end': kwargs.get('end', None),
+            'start': kwargs.get('start', None),
+            'time_step': kwargs.get('time_step', None),
+        }
+        return self._make_api_request('/applications/{0}/data/'.format(app_id), params=params)
+
+
     def get_application_detail(self, app_id, **kwargs):
         """
         Retrieves historical detail data for a given application.
-        
+
         http://support.appfirst.com/apis/applications/#applicationiddetail
         """
-        
         params = {'time': kwargs.get('time', None)}
-        
-        return self._make_api_request('/applications/{0}/detail/'.format(app_id), params = params)
+        return self._make_api_request('/applications/{0}/detail/'.format(app_id), params=params)
+
 
     def add_application(self, name, source_type, template_id, **kwargs):
         """
@@ -559,8 +567,7 @@ class AppFirstApi(object):
             raise ValueError("Source Type must be either 'servers' or 'set' to create application")
 
         data['template_id'] = template_id
-        
-        return self._make_api_request('/v4/applications/', data=data, method="POST", json_dump=False)
+        return self._make_api_request('/applications/', data=data, method="POST", json_dump=False)
 
 
     def remove_application(self, application_id):
@@ -568,7 +575,7 @@ class AppFirstApi(object):
         Removes an application by specific application id
 
         """
-        return self._make_api_request('/v4/applications/{0}'.format(application_id), method="DELETE")
+        return self._make_api_request('/applications/{0}'.format(application_id), method="DELETE")
 
 
     # Templates
@@ -576,14 +583,14 @@ class AppFirstApi(object):
         """
         Returns a dictionary for all defined templates
         """
-        return self._make_api_request('/v4/applications/templates/')
+        return self._make_api_request('/applications/templates/')
 
 
     def get_template(self, template_id):
         """
         Returns a dictionary of details for a specific template matching template_id
         """
-        return self._make_api_request('/v4/applications/templates/{0}'.format(template_id))
+        return self._make_api_request('/applications/templates/{0}'.format(template_id))
 
 
     def add_template(self, name, proc_name, proc_args, proc_args_direction):
@@ -607,14 +614,15 @@ class AppFirstApi(object):
         else:
             raise ValueError("Name provided is too long")
 
-        return self._make_api_request('/v4/applications/templates/', data=data, method="POST", json_dump=False)
+        return self._make_api_request('/applications/templates/', data=data, method="POST", json_dump=False)
+
 
     def remove_template(self, template_id):
         """
         Removes a template by the specific template id
         """
+        return self._make_api_request('/applications/templates/{0}/'.format(template_id), method="DELETE")
 
-        return self._make_api_request('/v4/applications/templates/{0}/'.format(template_id), method="DELETE")
 
     def get_process_data(self, uid, **kwargs):
         """
@@ -640,31 +648,29 @@ class AppFirstApi(object):
             raise ValueError("Invalid time_step: {0}".format(time_step))
         else:
             params['time_step'] = time_step
-        
 
-        return self._make_api_request('/v4/processes/{0}/data/'.format(uid), params = params)
+        return self._make_api_request('/processes/{0}/data/'.format(uid), params=params)
 
     def get_process_detail(self, uid, **kwargs):
         """
         Gets data for the given server.
-        
+
         http://support.appfirst.com/apis/processes/#processesdetail
         """
-        
-        if 'time' in kwargs: params = {'time': kwargs['time']}
-        
-        return self._make_api_request('/processes/{0}/detail/'.format(uid), params = params)
+        params = {'time': kwargs['time']} if 'time' in kwargs else {}
+        return self._make_api_request('/processes/{0}/detail/'.format(uid), params=params)
+
     def get_logs(self, **kwargs):
         """
         Returns the list of logs for this account.
 
         http://support.appfirst.com/apis/logs/#logs
         """
-        
-        params = {'limit': kwargs.get('num', 1)}
-        params['page'] = kwargs.get('page', 0)
-
-        return self._make_api_request('/logs/', params = params)
+        params = {
+            'limit': kwargs.get('num', 1),
+            'page': kwargs.get('page', 0),
+        }
+        return self._make_api_request('/logs/', params=params)
 
     def get_log(self, log_id, **kwargs):
         """
@@ -672,43 +678,44 @@ class AppFirstApi(object):
 
         http://support.appfirst.com/apis/logs/#logid
         """
-        
-        params = {'limit': kwargs.get('num', 1)}
-        params['page'] = kwargs.get('page', 0)
-
-        return self._make_api_request('/logs/{0}'.format(log_id), params = params)
+        params = {
+            'limit': kwargs.get('num', 1),
+            'page': kwargs.get('page', 0),
+        }
+        return self._make_api_request('/logs/{0}'.format(log_id), params=params)
 
     def get_log_data(self, log_id, **kwargs):
         """
         Retrieves summary data for the given log.
-        
+
         http://support.appfirst.com/apis/logs/#logiddata
         """
-        
-        params = {'limit': kwargs.get('num', 1)}
-        params['page'] = kwargs.get('page', 0)
-
-        return self._make_api_request('/logs/{0}/data'.format(log_id), params = params)
+        params = {
+            'limit': kwargs.get('num', 1),
+            'page': kwargs.get('page', 0),
+        }
+        return self._make_api_request('/logs/{0}/data'.format(log_id), params=params)
 
     def get_user_profiles(self, **kwargs):
         """
         Lists all available user profiles or creates a new one. See above for the attributes each user profile has.
-        
+
         http://support.appfirst.com/apis/user-profiles/#userprofiles
         """
+        params = {
+            'limit': kwargs.get('num', 2500),
+            'page': kwargs.get('page', 0),
+        }
+        if 'email' in kwargs:
+            params['email'] = kwargs.get('email')
 
-        params = {'limit': kwargs.get('num', 2500)}
-        params['page'] = kwargs.get('page', 0)
-        if 'email' in kwargs: params['email'] = kwargs.get('email')
-
-        return self._make_api_request('/user_profiles/', params = params)
+        return self._make_api_request('/user_profiles/', params=params)
 
     def get_user_profile(self, user_id, **kwargs):
         """
         View a user user_profile
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
-
         return self._make_api_request('/user_profiles/{0}'.format(user_id))
 
     def create_user_profile(self, first_name, last_name, email, country_code, phone_number):
@@ -719,13 +726,13 @@ class AppFirstApi(object):
 
         first_name (required, String, length:1-30) – the first name of the new user profile.
         last_name (required, String, length:1-30) – the last name of the new user profile.
-        email (required, String) – email address of this profile, it must be unique for each user profile. A valid email format is required. Once the user is successfully created, a confirmation email will be sent to the new user.
+        email (required, String) – email address of this profile, it must be unique for each user profile.
+            A valid email format is required. Once the user is successfully created, a confirmation email will be sent to the new user.
         country_code (required, int) – ISO country code for this user’s phone, required for sending SMS message.
         phone_number (required, int) – phone number of this user, required for sending SMS message.
 
         http://support.appfirst.com/apis/user-profiles/#userprofiles
         """
-
         if len(first_name)>30 or len(last_name)>30:
             raise ValueError("Name provided is too long, must be length 1-30")
 
@@ -735,59 +742,58 @@ class AppFirstApi(object):
         if type(phone_number)!= int:
              raise ValueError("Phone number must be int")
 
-        data = {'first_name': first_name,
-                'last_name': last_name,
-                'email': email,
-                'country_code': country_code,
-                'phone_number': phone_number}
-
-        return self._make_api_request('/user_profiles/', data = data, method='POST', json_dump=False)
-
+        data = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'country_code': country_code,
+            'phone_number': phone_number,
+        }
+        return self._make_api_request('/user_profiles/', data=data, method='POST', json_dump=False)
 
     def update_user_profile(self, user_id, data):
         """
         Update the information for this user.
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
-
         if not isinstance(data, dict):
             raise TypeError("Data must be a dictionary")
 
+        # TODO use urlencode method for this
         data_string = ""
-        for key, item in data.iteritems():            
+        for key, item in data.iteritems():
             data_string += "{0}={1}&".format(key, item)
-        
-        return self._make_api_request('/user_profiles/{0}/'.format(user_id), data = data_string, method='PUT')
+
+        return self._make_api_request('/user_profiles/{0}/'.format(user_id), data=data_string, method='PUT')
 
     def delete_user_profile(self, user_id):
         """
         Delete a user profile. Account owner can NOT be deleted.
-        
+
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
-
         return self._make_api_request('/user_profiles/{0}/'.format(user_id), method='DELETE')
-        
+
     def get_maintenance_window(self, window_id):
         """
         List all available maintenance windows.
-        
+
         http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
         """
-        
         return self._make_api_request('/maintenance_windows/{0}'.format(window_id))
-    
+
     def get_maintenance_windows(self, **kwargs):
         """
         List all available maintenance windows.
-        
+
         http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
         """
-        params = {'limit': kwargs.get('num', 2500)}
-        params['page'] = kwargs.get('page', 0)
-        
-        return self._make_api_request('/maintenance_windows/', params = params)
-        
+        params = {
+            'limit': kwargs.get('num', 2500),
+            'page': kwargs.get('page', 0),
+        }
+        return self._make_api_request('/maintenance_windows/', params=params)
+
     def create_maintenance_window(self, start, end, servers, **kwargs):
         """
         Create a new maintenance window.
@@ -796,98 +802,101 @@ class AppFirstApi(object):
         end (required) – end time in UTC time zone (ex: yyyy-mm-dd 24hr:mm).
         reason (optional)- reason for maintenance window.
         servers (required) – a list of server IDs.
-        
+
         http://support.appfirst.com/apis/maintenance-windows/#maintenancewindows
         """
-        if type(servers) is not list: raise("severs argument must be provided as list")
-        
+        if type(servers) is not list:
+            raise("severs argument must be provided as list")
+
         data = {'start': start, 'end': end, 'servers': servers}
-        
-        if 'reason' in kwargs: data['reason'] = kwargs['reason']
-        
+
+        if 'reason' in kwargs:
+            data['reason'] = kwargs['reason']
+
         return self._make_api_request('/maintenance_windows/', data=data, method="POST", json_dump=False)
-    
+
     def delete_maintenance_window(self, window_id):
         """
         Removes maintenance window
         """
-        
         return self._make_api_request('/maintenance_windows/{0}'.format(window_id), method='DELETE')
-        
+
     def update_maintenance_window(self, window_id, start, end, servers, **kwargs):
         """
         Update maintenance window with new information
         """
-        if type(servers) is not list: raise("severs argument must be provided as list")
-        
+        if type(servers) is not list:
+            raise("severs argument must be provided as list")
+
         data = {'start': start, 'end': end, 'servers': servers}
-        
-        if 'reason' in kwargs: data['reason'] = kwargs['reason']
-        
-        return self._make_api_request('/maintenance_windows/{0}'.format(window_id), data = data, method='PUT')
-        
+
+        if 'reason' in kwargs:
+            data['reason'] = kwargs['reason']
+
+        return self._make_api_request('/maintenance_windows/{0}'.format(window_id), data=data, method='PUT')
+
     def create_mobile_device(self, brand, uid, **kwargs):
         """
         Create a new mobile device for this user. Requires the brand and uid parameters.
 
-        It takes an additional boolean parameter “subscribe_all” that indicates whether the new device 
-        should automatically be subscribed to all alerts for push notifications, or none. 
-        
+        It takes an additional boolean parameter “subscribe_all” that indicates whether the new device
+        should automatically be subscribed to all alerts for push notifications, or none.
+
         http://support.appfirst.com/apis/mobile-devices/#mobiledevices
         """
-        
         data = {'brand': brand, 'uid': uid}
-        
-        if 'subscribe_all' in kwargs: data['subscribe_all'] = kwargs['subscribe_all']
-        
-        return self._make_api_request('/mobile-devices/', data = data, method='POST')
-        
+
+        if 'subscribe_all' in kwargs:
+            data['subscribe_all'] = kwargs['subscribe_all']
+
+        return self._make_api_request('/mobile-devices/', data=data, method='POST')
+
     def get_alert_histories(self, **kwargs):
         """
         Lists recent alert histories.
-        
+
         http://support.appfirst.com/apis/alert-histories/#alerthistories
         """
-        params = {'limit': kwargs.get('limit', None)}
-        params['page'] = kwargs.get('page', None)
-        params['start'] = kwargs.get('start', None)
-        params['filter'] = kwargs.get('filter', None)
-        
-        return self._make_api_request('/alert-histories/', params = params)
-    
+        params = {
+            'limit': kwargs.get('limit', None),
+            'page': kwargs.get('page', None),
+            'start': kwargs.get('start', None),
+            'filter': kwargs.get('filter', None),
+        }
+        return self._make_api_request('/alert-histories/', params=params)
+
     def get_alert_history(self, history_id):
         """
         View an alert history.
 
         http://support.appfirst.com/apis/alert-histories/#alerthistories
         """
-        
         return self._make_api_request('/alert-histories/{0}'.format(history_id))
-        
+
     def get_alert_history_message(self, hist_id):
         """
         View the email message content of an alert history.
-        
+
         http://support.appfirst.com/apis/alert-histories/#alerthistories
         """
-        
         return self._make_api_request('/alert-histories/{0}/message/'.format(hist_id))
 
     def get_buckets(self, **kwargs):
         """
         Lists all available bucket data items.
-        
+
         http://support.appfirst.com/apis/buckets/#buckets
         """
-        params = {'limit': kwargs.get('limit', None)}
-        params['page'] = kwargs.get('page', None)
-        
-        return self._make_api_request('/buckets/', params = params)
-        
+        params = {
+            'limit': kwargs.get('limit', None),
+            'page': kwargs.get('page', None),
+        }
+        return self._make_api_request('/buckets/', params=params)
+
     def get_bucket_data(self, bucket_id, **kwargs):
         """
-        Retrieves historical data for the given bucket. 
-        
+        Retrieves historical data for the given bucket.
+
         http://support.appfirst.com/apis/buckets/#bucketid
         """
         params = {'num': kwargs.get('num', 1)}
@@ -910,23 +919,21 @@ class AppFirstApi(object):
             raise ValueError("Invalid time_step: {0}".format(time_step))
         else:
             params['time_step'] = time_step
-            
+
         return self._make_api_request('/buckets/{0}/data/'.format(bucket_id))
-        
+
     def get_bucket(self, bucket_id):
         """
         View or edit a bucket.
-        
+
         http://support.appfirst.com/apis/buckets/#bucketid
         """
-        
         return self._make_api_request('/buckets/{0}'.format(bucket_id))
-        
+
     def delete_bucket(self, bucket_id):
         """
         View or edit a bucket.
-        
+
         http://support.appfirst.com/apis/buckets/#bucketid
         """
-        
         return self._make_api_request('/buckets/{0}/'.format(bucket_id), method='DELETE')
