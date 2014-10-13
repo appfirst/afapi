@@ -3,3 +3,8 @@
 *.pyc
 *.pyo
 .DS_Store
+
+# setup.py artifacts
+AppFirstAPI.egg-info/
+build/
+dist/
