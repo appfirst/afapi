@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 """
-Uses V4 of AppFirst's HTTP API
+Uses V5 of AppFirst's HTTP API
 
 Full API documentation: http://support.appfirst.com/apis/
 """
@@ -16,4 +16,4 @@ __email__ = "michael@appfirst.com"
 __status__ = "Development"
 
 
-from .appfirst_api import AppFirstAPI
+from .appfirst_api import AppFirstAPI  # NOQA
