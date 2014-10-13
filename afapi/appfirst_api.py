@@ -27,12 +27,13 @@ class AppFirstAPI(object):
 
     def __init__(self, email, api_key,
                  base_url='https://wwws.appfirst.com/api', use_strict_ssl=True,
-                 version=5):
+                 version=5, raise_exceptions=False):
         self.email = email
         self.api_key = api_key
         self.base_url = base_url
         self.use_strict_ssl = use_strict_ssl
         self.version = version
+        self.raise_exceptions = raise_exceptions
 
     # Helper methods
     def _make_api_request(self, url, **kwargs):
@@ -77,16 +78,17 @@ class AppFirstAPI(object):
         r = request_method(full_url, auth=(self.email, self.api_key),
                            params=params, data=data, headers=headers,
                            verify=self.use_strict_ssl)
-        if r.status_code == requests.codes.ok:
-            try:
-                return r.json()
-            except ValueError:
-                return r.text
+
+        if r.status_code != requests.codes.ok and self.raise_exceptions:
+            req_msg = "{0.status_code}: {0.text}".format(r) \
+                if r.text != "" else r.status_code
+            exc_msg = "{0} reqeust to url {1} failed".format(method, full_url)
+            raise exceptions.RequestError("{0} ({1})".format(exc_msg, req_msg))
         else:
-            err_msg = u"{0}: {1}".format(r.status_code, r.text) \
-                if r.text != '' else r.status_code
-            raise exceptions.RequestError(u"Server returned status code: "
-                                          u"{0}".format(err_msg))
+            try:
+                return (r.status_code, r.json())
+            except ValueError:
+                return (r.status_code, r.text)
 
     def _get_list_params(self, **kwargs):
         """
@@ -279,7 +281,7 @@ class AppFirstAPI(object):
         return self._make_api_request(url)
 
     # Process APIs
-    def get_processes(self, host_id, **kwargs):
+    def get_server_processes(self, host_id, **kwargs):
         """
         Returns the list of processes on a server. See the Processes API
         documentation for more information about process objects.
@@ -309,7 +311,7 @@ class AppFirstAPI(object):
         url = '/servers/{0}/processes/'.format(host_id)
         return self._make_api_request(url, params=params)
 
-    def get_processes_data(self, host_id, **kwargs):
+    def get_server_processes_data(self, host_id, **kwargs):
         """
         Returns the list of a processes’ summary data on a particular server.
 
@@ -586,28 +588,28 @@ class AppFirstAPI(object):
         return self._make_api_request('/server_tags/{0}'.format(tag_id))
 
     # Applications
-    def get_applications(self, **kwargs):
+    def get_process_groups(self, **kwargs):
         """
         Returns a dictionary of details for all definined applications.
         """
         params = self._get_list_params(**kwargs)
         return self._make_api_request('/applications/', params=params)
 
-    def get_application(self, app_id):
+    def get_process_group(self, app_id):
         """
         Returns a dictionary of details for a specific application matching
         the given app_id
         """
         return self._make_api_request('/applications/{0}/'.format(app_id))
 
-    def get_application_processes(self, app_id):
+    def get_process_group_processes(self, app_id):
         """
         Returns a dictionary of processes used by specific app_id
         """
         url = '/applications/{0}/processes'.format(app_id)
         return self._make_api_request(url)
 
-    def get_application_data(self, app_id, **kwargs):
+    def get_process_group_data(self, app_id, **kwargs):
         """
         Gets data for the given application. It gets up to "num" points
         starting from "end" and going back "start."
@@ -623,7 +625,7 @@ class AppFirstAPI(object):
         return self._make_api_request('/applications/{0}/data/'.format(app_id),
                                       params=params)
 
-    def get_application_detail(self, app_id, **kwargs):
+    def get_process_group_details(self, app_id, **kwargs):
         """
         Retrieves historical detail data for a given application.
 
@@ -633,8 +635,8 @@ class AppFirstAPI(object):
         url = '/applications/{0}/detail/'.format(app_id)
         return self._make_api_request(url, params=params)
 
-    def create_application(self, name=None, source_type=None, template_id=None,
-                           **kwargs):
+    def create_process_group(self, name=None, source_type=None,
+                             template_id=None, **kwargs):
         """
         Creates an application based on the documented requirements:
 
@@ -674,7 +676,7 @@ class AppFirstAPI(object):
         return self._make_api_request('/applications/', data=data,
                                       method='POST', json_dump=False)
 
-    def delete_application(self, app_id):
+    def delete_process_group(self, app_id):
         """
         Removes an application by specific application id
         """
@@ -682,7 +684,7 @@ class AppFirstAPI(object):
                                       method='DELETE')
 
     # Templates
-    def get_templates(self, **kwargs):
+    def get_process_templates(self, **kwargs):
         """
         Returns a dictionary for all defined templates
         """
@@ -690,7 +692,7 @@ class AppFirstAPI(object):
         return self._make_api_request('/applications/templates/',
                                       params=params)
 
-    def get_template(self, template_id):
+    def get_process_template(self, template_id):
         """
         Returns a dictionary of details for a specific template matching
         template_id
@@ -698,8 +700,8 @@ class AppFirstAPI(object):
         url = '/applications/templates/{0}/'.format(template_id)
         return self._make_api_request(url)
 
-    def create_template(self, name=None, proc_name=None, proc_args=None,
-                        match_includes_args=True):
+    def create_process_template(self, name=None, proc_name=None,
+                                proc_args=None, match_includes_args=True):
         """
         Creates a template based on the documented requirements:
 
@@ -729,7 +731,7 @@ class AppFirstAPI(object):
         return self._make_api_request('/applications/templates/', data=data,
                                       method='POST', json_dump=False)
 
-    def delete_template(self, template_id):
+    def delete_process_template(self, template_id):
         """
         Removes a template by the specific template id
         """
@@ -772,7 +774,7 @@ class AppFirstAPI(object):
         return self._make_api_request('/processes/{0}/data/'.format(uid),
                                       params=params)
 
-    def get_process_detail(self, server_id, pid, createtime, **kwargs):
+    def get_process_details(self, server_id, pid, createtime, **kwargs):
         """
         Gets data for the given server.
 
