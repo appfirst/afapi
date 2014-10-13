@@ -388,8 +388,8 @@ class AppFirstAPI(object):
         # Send request
         return self._make_api_request('/alerts/', params=params)
 
-    def add_alert(self, name=None, alert_type=None, target_id=None,
-                  trigger_type=None, users=[], **kwargs):
+    def create_alert(self, name=None, alert_type=None, target_id=None,
+                     trigger_type=None, users=[], **kwargs):
         """
         Creates alerts on processes based on documented requirements:
 
@@ -633,8 +633,8 @@ class AppFirstAPI(object):
         url = '/applications/{0}/detail/'.format(app_id)
         return self._make_api_request(url, params=params)
 
-    def add_application(self, name=None, source_type=None, template_id=None,
-                        **kwargs):
+    def create_application(self, name=None, source_type=None, template_id=None,
+                           **kwargs):
         """
         Creates an application based on the documented requirements:
 
@@ -698,8 +698,8 @@ class AppFirstAPI(object):
         url = '/applications/templates/{0}/'.format(template_id)
         return self._make_api_request(url)
 
-    def add_template(self, name=None, proc_name=None, proc_args=None,
-                     match_includes_args=True):
+    def create_template(self, name=None, proc_name=None, proc_args=None,
+                        match_includes_args=True):
         """
         Creates a template based on the documented requirements:
 
