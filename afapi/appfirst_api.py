@@ -27,7 +27,7 @@ class AppFirstAPI(object):
 
     def __init__(self, email, api_key,
                  base_url='https://wwws.appfirst.com/api', use_strict_ssl=True,
-                 version=4):
+                 version=5):
         self.email = email
         self.api_key = api_key
         self.base_url = base_url
