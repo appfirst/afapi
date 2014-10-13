@@ -16,4 +16,4 @@ __email__ = "michael@appfirst.com"
 __status__ = "Development"
 
 
-from .appfirst_api import AppFirstApi
+from .appfirst_api import AppFirstAPI
