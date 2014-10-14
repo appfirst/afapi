@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 """
-Uses V4 of AppFirst's HTTP API
+Uses v5 of AppFirst's HTTP API
 
 Full API documentation: http://support.appfirst.com/apis/
 """
@@ -86,9 +86,9 @@ class AppFirstAPI(object):
             raise exceptions.RequestError("{0} ({1})".format(exc_msg, req_msg))
         else:
             try:
-                return (r.status_code, r.json())
+                return (r.json(), r.status_code)
             except ValueError:
-                return (r.status_code, r.text)
+                return (r.text, r.status_code)
 
     def _get_list_params(self, **kwargs):
         """
