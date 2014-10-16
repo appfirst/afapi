@@ -7,8 +7,9 @@ Full API documentation: http://support.appfirst.com/apis/
 """
 
 
-import time
+import calendar
 import datetime
+
 try:
     import simplejson as json
 except ImportError:
@@ -183,12 +184,12 @@ class AppFirstAPI(object):
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
-            params['end'] = time.mktime(end.timetuple())
+            params['end'] = calendar.timegm(end.timetuple())
 
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
-            params['start'] = time.mktime(start.timetuple())
+            params['start'] = calendar.timegm(start.timetuple())
 
         if time_step not in ['Minute', 'Hour', 'Day']:
             raise ValueError("Invalid time_step: {0}".format(time_step))
@@ -222,12 +223,12 @@ class AppFirstAPI(object):
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
-            params['end'] = time.mktime(end.timetuple())
+            params['end'] = calendar.timegm(end.timetuple())
 
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
-            params['start'] = time.mktime(start.timetuple())
+            params['start'] = calendar.timegm(start.timetuple())
 
         return self._make_api_request('/servers/{0}/outages/'.format(host_id))
 
@@ -310,12 +311,12 @@ class AppFirstAPI(object):
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
-            params['end'] = time.mktime(end.timetuple())
+            params['end'] = calendar.timegm(end.timetuple())
 
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
-            params['start'] = time.mktime(start.timetuple())
+            params['start'] = calendar.timegm(start.timetuple())
 
         url = '/servers/{0}/processes/'.format(host_id)
         return self._make_api_request(url, params=params)
@@ -346,12 +347,12 @@ class AppFirstAPI(object):
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
-            params['end'] = time.mktime(end.timetuple())
+            params['end'] = calendar.timegm(end.timetuple())
 
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
-            params['start'] = time.mktime(start.timetuple())
+            params['start'] = calendar.timegm(start.timetuple())
 
         if time_step not in ['Minute', 'Hour', 'Day']:
             raise ValueError("Invalid time_step: {0}".format(time_step))
@@ -639,6 +640,7 @@ class AppFirstAPI(object):
                              "than 32 characters.")
 
         if source_type == 'servers' and 'servers' in kwargs:
+            data['source_type'] = 'servers'
             data['servers'] = kwargs.get('servers')
             if not isinstance(data['servers'], list) \
                     or len(data['servers']) == 0:
@@ -647,13 +649,8 @@ class AppFirstAPI(object):
 
         elif source_type == 'set' and 'set' in kwargs:
             # Look up servers that are a part of this set
-            set_url = '/server_sets/{0}/'.format(kwargs['set'])
-            set_data = self._make_api_request(set_url)
-            if set_data[1] in self.ok_codes and 'servers' in set_data[0]:
-                data['servers'] = set_data[0]['servers']
-            else:
-                raise Exception("Failed to get list of servers belonging "
-                                "to server set from API.")
+            data['source_type'] = 'set'
+            data['set'] = kwargs['set']
 
         else:
             raise ValueError("Source Type must be either 'servers' or 'set' "
@@ -760,12 +757,12 @@ class AppFirstAPI(object):
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
-            params['end'] = time.mktime(end.timetuple())
+            params['end'] = calendar.timegm(end.timetuple())
 
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
-            params['start'] = time.mktime(start.timetuple())
+            params['start'] = calendar.timegm(start.timetuple())
 
         if time_step not in ['Minute', 'Hour', 'Day']:
             raise ValueError("Invalid time_step: {0}".format(time_step))
@@ -919,8 +916,8 @@ class AppFirstAPI(object):
             raise TypeError("start value must be a datetime.datetime instance")
 
         data = {
-            'start': time.mktime(start.timetuple()),
-            'end': time.mktime(end.timetuple()),
+            'start': calendar.timegm(start.timetuple()),
+            'end': calendar.timegm(end.timetuple()),
             'servers': servers,
         }
         if 'reason' in kwargs:
@@ -950,8 +947,8 @@ class AppFirstAPI(object):
             raise TypeError("start value must be a datetime.datetime instance")
 
         data = {
-            'start': time.mktime(start.timetuple()),
-            'end': time.mktime(end.timetuple()),
+            'start': calendar.timegm(start.timetuple()),
+            'end': calendar.timegm(end.timetuple()),
             'servers': servers,
         }
         if 'reason' in kwargs:
@@ -992,12 +989,12 @@ class AppFirstAPI(object):
         if end is not None and not isinstance(end, datetime.datetime):
             raise TypeError("end value must be a datetime.datetime instance")
         elif end is not None:
-            params['end'] = time.mktime(end.timetuple())
+            params['end'] = calendar.timegm(end.timetuple())
 
         if start is not None and not isinstance(start, datetime.datetime):
             raise TypeError("start value must be a datetime.datetime instance")
         elif start is not None:
-            params['start'] = time.mktime(start.timetuple())
+            params['start'] = calendar.timegm(start.timetuple())
 
         if time_step not in ['Minute', 'Hour', 'Day']:
             raise ValueError("Invalid time_step: {0}".format(time_step))
