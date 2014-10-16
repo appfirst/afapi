@@ -25,15 +25,18 @@ class AppFirstAPI(object):
     different forms of data.
     """
 
+    ok_codes = [200, 201, 202, 203, 204, 205, 206]
+
     def __init__(self, email, api_key,
                  base_url='https://wwws.appfirst.com/api', use_strict_ssl=True,
-                 version=5, raise_exceptions=False):
+                 version=5, raise_exceptions=False, debug=False):
         self.email = email
         self.api_key = api_key
         self.base_url = base_url
         self.use_strict_ssl = use_strict_ssl
         self.version = version
         self.raise_exceptions = raise_exceptions
+        self.debug = debug
 
     # Helper methods
     def _make_api_request(self, url, **kwargs):
@@ -69,21 +72,30 @@ class AppFirstAPI(object):
             request_method = requests.post
         elif method == 'PUT':
             request_method = requests.put
+        elif method == 'PATCH':
+            request_method = requests.patch
         elif method == 'DELETE':
             request_method = requests.delete
         else:
             raise ValueError("Invalid HTTP method: {0}".format(method))
 
         # Make request and check return status
+        if self.debug:
+            print(("> Making {0} request to {1}:\nparams={2}\ndata={3}\n"
+                   "headers={4}".format(method, full_url, params, data,
+                                        headers)))
+
         r = request_method(full_url, auth=(self.email, self.api_key),
                            params=params, data=data, headers=headers,
                            verify=self.use_strict_ssl)
+        if self.debug:
+            print("< Got response with status: {0}".format(r.status_code))
 
-        if r.status_code != requests.codes.ok and self.raise_exceptions:
-            req_msg = "{0.status_code}: {0.text}".format(r) \
-                if r.text != "" else r.status_code
-            exc_msg = "{0} reqeust to url {1} failed".format(method, full_url)
-            raise exceptions.RequestError("{0} ({1})".format(exc_msg, req_msg))
+        if r.status_code not in self.ok_codes and self.raise_exceptions:
+            r_msg = u"{0.status_code}: {0.text}".format(r) \
+                if r.text else r.status_code
+            exc_msg = u"{0} reqeust to url {1} failed".format(method, full_url)
+            raise exceptions.RequestError(u"{0} ({1})".format(exc_msg, r_msg))
         else:
             try:
                 return (r.json(), r.status_code)
@@ -93,6 +105,7 @@ class AppFirstAPI(object):
     def _get_list_params(self, **kwargs):
         """
         Function to get limit/page/filter arguments for API list requests
+        - filter is a dictionary like {'hostname': 's05-room02'}
         """
         params = {}
         if 'limit' in kwargs:
@@ -100,18 +113,17 @@ class AppFirstAPI(object):
         if 'page' in kwargs:
             params['page'] = kwargs['page']
         if 'filter' in kwargs:
-            params['filter'] = kwargs['filter']
+            params.update(kwargs['filter'])
         return params
 
     # Server APIs
-    def get_servers(self, hostname=None, **kwargs):
+    def get_servers(self, **kwargs):
         """
         Lists all available servers.
 
         http://support.appfirst.com/apis/servers/#servers
         """
         params = self._get_list_params(**kwargs)
-        params.update({'hostname': hostname} if hostname else {})
         return self._make_api_request('/servers/', params=params)
 
     def get_server(self, host_id):
@@ -132,12 +144,9 @@ class AppFirstAPI(object):
         if not isinstance(data, dict):
             raise TypeError("Data must be a dictionary")
 
-        data_string = ''
-        for key, item in data.iteritems():
-            data_string += '{0}={1}&'.format(key, item)
-
         return self._make_api_request('/servers/{0}/'.format(host_id),
-                                      data=data_string, method='PUT')
+                                      data=data, json_dump=False,
+                                      method='PATCH')
 
     def delete_server(self, host_id):
         """
@@ -245,7 +254,7 @@ class AppFirstAPI(object):
             raise TypeError("Data must be a dictionary")
 
         url = '/servers/{0}/polled_data_config/'.format(host_id)
-        return self._make_api_request(url, method='PUT', data=data)
+        return self._make_api_request(url, method='PATCH', data=data)
 
     def get_server_tags(self, host_id, **kwargs):
         """
@@ -266,9 +275,9 @@ class AppFirstAPI(object):
         if not isinstance(new_tags, list):
             raise TypeError("new_tags must be a list")
 
-        params = {'server_tags': json.dumps(new_tags)}
+        data = {'server_tags': json.dumps(new_tags)}
         return self._make_api_request('/servers/{0}/tags/'.format(host_id),
-                                      method='PUT', params=params)
+                                      method='PATCH', data=data)
 
     def trigger_server_app_auto_detect(self, host_id):
         """
@@ -358,36 +367,9 @@ class AppFirstAPI(object):
         """
         Returns the list of alerts existing.
 
-        Arguments
-            - limit (optional, default:2500, max:2500) – Sets the page size to
-                a limit set by the user.
-            - page (optional, default:0) – Retrieve the specific page of data
-                of size limit.
-            - filter_name (optional) – the type of object to filter the alerts.
-                Must be one of “application_id”, ”process_id”, ”server_id”,
-                               “polled_data_id”, “log_id”.
-            - filter_id (optional) – The integer id of the objects.
-
         http://support.appfirst.com/apis/alerts/#alerts
         """
         params = self._get_list_params(**kwargs)
-        filter_types = [
-            "application_id", "process_id", "server_id", "polled_data_id",
-            "log_id",
-        ]
-
-        # Sanity check
-        filter_name = kwargs.get('filter_name', None)
-        if filter_name is not None and filter_name not in filter_types:
-            raise ValueError("Filter Name must be one of "
-                             "{0}".format(repr(filter_types)))
-        else:
-            params['filter_name'] = filter_name
-
-        if 'filter_id' in kwargs:
-            params['filter_id'] = kwargs['filter_id']
-
-        # Send request
         return self._make_api_request('/alerts/', params=params)
 
     def create_alert(self, name=None, alert_type=None, target_id=None,
@@ -441,7 +423,7 @@ class AppFirstAPI(object):
             raise ValueError("Process target id must have 4 parameters: "
                              "(server_id, pid, createtime, name)")
         elif alert_type == 'Process':
-            data['target_id'] = ','.join(target_id)
+            data['target_id'] = ','.join([str(i) for i in target_id])
         else:
             data['target_id'] = target_id
 
@@ -554,6 +536,12 @@ class AppFirstAPI(object):
         params = self._get_list_params(**kwargs)
         return self._make_api_request('/server_tags/', params=params)
 
+    def get_server_tag(self, tag_id):
+        """
+        Returns single server tag
+        """
+        return self._make_api_request('/server_tags/{0}'.format(tag_id))
+
     def create_server_tag(self, name, ids):
         """
         Create a new server tag.
@@ -580,12 +568,6 @@ class AppFirstAPI(object):
         """
         return self._make_api_request('/server_tags/{0}'.format(tag_id),
                                       method='DELETE')
-
-    def get_server_tag(self, tag_id):
-        """
-        Returns single server tag
-        """
-        return self._make_api_request('/server_tags/{0}'.format(tag_id))
 
     # Applications
     def get_process_groups(self, **kwargs):
@@ -648,31 +630,36 @@ class AppFirstAPI(object):
 
         Optional arguments are adding at the end
         """
-        data = {}
+        data = {'template': template_id}
 
         if isinstance(name, basestring) and len(name) <= 32:
-            data['app_name'] = name
+            data['name'] = name
         else:
             raise ValueError("Name provided is too long. Must be no longer "
                              "than 32 characters.")
 
-        if source_type == 'servers':
-            data['source_type'] = 'servers'
-            data['servers'] = kwargs.get('servers', [])
+        if source_type == 'servers' and 'servers' in kwargs:
+            data['servers'] = kwargs.get('servers')
             if not isinstance(data['servers'], list) \
                     or len(data['servers']) == 0:
                 raise ValueError("Received invalid list of servers for "
                                  "application definition.")
 
-        elif source_type == 'set':
-            data['source_type'] = 'set'
-            data['set'] = kwargs['set']
+        elif source_type == 'set' and 'set' in kwargs:
+            # Look up servers that are a part of this set
+            set_url = '/server_sets/{0}/'.format(kwargs['set'])
+            set_data = self._make_api_request(set_url)
+            if set_data[1] in self.ok_codes and 'servers' in set_data[0]:
+                data['servers'] = set_data[0]['servers']
+            else:
+                raise Exception("Failed to get list of servers belonging "
+                                "to server set from API.")
 
         else:
             raise ValueError("Source Type must be either 'servers' or 'set' "
-                             "to create application")
+                             "and server ids or set id must be specified "
+                             "in order to create application")
 
-        data['template_id'] = template_id
         return self._make_api_request('/applications/', data=data,
                                       method='POST', json_dump=False)
 
@@ -701,26 +688,32 @@ class AppFirstAPI(object):
         return self._make_api_request(url)
 
     def create_process_template(self, name=None, proc_name=None,
-                                proc_args=None, match_includes_args=True):
+                                proc_args=None, proc_args_directions=None,
+                                match_includes_args=True, rules=None):
         """
         Creates a template based on the documented requirements:
 
         - name(required, String, length:1-32) - the name of the template
-        - proc_name(required, regex String) - the name of the process to watch
-        - proc_args(required, regex String) - the command line arguments the
-            process should have
-        - proc_args_direction(required, String, "include" or "exclude")
-            - "include" for processes with arguments matching proc_args
-            - "exclude" for processes with arguments not matching proc_args
+        - rules - A list of rules of the format:
+            ["Processes matching python with arguments matching *"]
         """
-        data = {
-            'proc_name': proc_name,
-            'proc_args': proc_args,
-        }
-        if match_includes_args:
-            data['proc_args_direction'] = 'include'
+        if rules and isinstance(rules, list):
+            # List of rules like
+            #   ["Processes matching python with arguments matching *"]
+            data = {'rules': rules}
+        elif rules:
+            raise TypeError("Rules must be a list of the format "
+                            "[\"Processes matching python with arguments "
+                            "matching *\"]")
+        elif isinstance(proc_name, list):
+            # List of multiple rules in separate format
+            data = {
+                'proc_name': proc_name,
+                'proc_args': proc_args,
+                'proc_args_direction': proc_args_directions,
+            }
         else:
-            data['proc_args_direction'] = 'exclude'
+            raise Exception("Unable to parse process template parameters.")
 
         if len(name) <= 32:
             data['template_name'] = name
@@ -738,18 +731,26 @@ class AppFirstAPI(object):
         url = '/applications/templates/{0}/'.format(template_id)
         return self._make_api_request(url, method="DELETE")
 
-    def get_process(self, server_id, pid, createtime, **kwargs):
+    def get_process(self, server_id=None, pid=None, createtime=None, uid=None,
+                    **kwargs):
         """
-        Returns info about a process
+        Returns info about a process.
+        Specify either a uid of the form "<server_id>_<pid>_<createtime>" or
+        the individual server_id, pid, createtime.
         """
-        uid = '{0}_{1}_{2}'.format(server_id, pid, createtime)
+        if uid is None:
+            uid = '{0}_{1}_{2}'.format(server_id, pid, createtime)
         return self._make_api_request('/processes/{0}/'.format(uid))
 
-    def get_process_data(self, server_id, pid, createtime, **kwargs):
+    def get_process_data(self, server_id=None, pid=None, createtime=None,
+                         uid=None, **kwargs):
         """
         Returns data for a specific uid
+        Specify either a uid of the form "<server_id>_<pid>_<createtime>" or
+        the individual server_id, pid, createtime.
         """
-        uid = '{0}_{1}_{2}'.format(server_id, pid, createtime)
+        if uid is None:
+            uid = '{0}_{1}_{2}'.format(server_id, pid, createtime)
         params = {'num': kwargs.get('num', 1)}
         end = kwargs.get('end', None)
         start = kwargs.get('start', None)
@@ -776,8 +777,9 @@ class AppFirstAPI(object):
 
     def get_process_details(self, server_id, pid, createtime, **kwargs):
         """
-        Gets data for the given server.
-
+        Retrieve detailed file/socket/thread/registry data for a process
+        Specify either a uid of the form "<server_id>_<pid>_<createtime>" or
+        the individual server_id, pid, createtime.
         http://support.appfirst.com/apis/processes/#processesdetail
         """
         uid = '{0}_{1}_{2}'.format(server_id, pid, createtime)
@@ -956,7 +958,7 @@ class AppFirstAPI(object):
             data['reason'] = kwargs['reason']
 
         url = '/maintenance_windows/{0}/'.format(window_id)
-        return self._make_api_request(url, data=data, method='PUT')
+        return self._make_api_request(url, data=data, method='PATCH')
 
     def get_buckets(self, **kwargs):
         """
