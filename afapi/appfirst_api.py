@@ -809,9 +809,20 @@ class AppFirstAPI(object):
         """
         return self._make_api_request('/logs/{0}/data/'.format(log_id))
 
-    # TODO
-    def create_user_profile(self, first_name, last_name, email, country_code,
-                            phone_number):
+    def get_users(self):
+        """
+        Retrieve a list of users on your account
+        """
+        return self._make_api_request('/users/')
+
+    def get_user(self, user_id):
+        """
+        Retrieve details for a particular user
+        """
+        return self._make_api_request('/users/{0}/'.format(user_id))
+
+    def create_user(self, first_name, last_name, email, country_code=None,
+                    phone_number=None, avatar_url=None):
         """
         Create a new user profile for this tenant.
 
@@ -835,40 +846,46 @@ class AppFirstAPI(object):
         if len(first_name) > 30 or len(last_name) > 30:
             raise ValueError("Name fields provided are too long. Must be no "
                              "longer than 30 characters.")
-
         if not isinstance(country_code, int):
             raise ValueError("Country code must be int")
-
         if not isinstance(phone_number, int):
             raise ValueError("Phone number must be int")
-
         data = {
             'first_name': first_name,
             'last_name': last_name,
             'email': email,
             'country_code': country_code,
             'phone_number': phone_number,
+            'avatar_url': avatar_url,
         }
         return self._make_api_request('/user_profiles/', data=data,
                                       method='POST', json_dump=False)
 
-    def update_user_profile(self, user_id, data):
+    def update_user(self, user_id, first_name, last_name, email,
+                    country_code=None, phone_number=None, avatar_url=None):
         """
         Update the information for this user.
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
-        # TODO Should be the same as create, not just a dict.
-        if not isinstance(data, dict):
-            raise TypeError("Data must be a dictionary")
-
-        data_string = ""
-        for key, item in data.iteritems():
-            data_string += "{0}={1}&".format(key, item)
-
+        if len(first_name) > 30 or len(last_name) > 30:
+            raise ValueError("Name fields provided are too long. Must be no "
+                             "longer than 30 characters.")
+        if not isinstance(country_code, int):
+            raise ValueError("Country code must be int")
+        if not isinstance(phone_number, int):
+            raise ValueError("Phone number must be int")
+        data = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'country_code': country_code,
+            'phone_number': phone_number,
+            'avatar_url': avatar_url,
+        }
         return self._make_api_request('/user_profiles/{0}/'.format(user_id),
-                                      data=data_string, method='PUT')
+                                      data=data, method='PUT', json_dump=False)
 
-    def delete_user_profile(self, user_id):
+    def delete_user(self, user_id):
         """
         Delete a user profile. Account owner can NOT be deleted.
 
@@ -876,6 +893,12 @@ class AppFirstAPI(object):
         """
         return self._make_api_request('/user_profiles/{0}/'.format(user_id),
                                       method='DELETE')
+
+    def get_account(self):
+        """
+        Return details about your account
+        """
+        return self._make_api_request('/account/')
 
     def get_maintenance_windows(self, **kwargs):
         """
