@@ -50,7 +50,7 @@ class AppFirstAPI(object):
             - data:    defaults to '' (for PUT requests)
             - headers: defaults to:
                 {'accept': 'application/json; version=self.version'}
-            - json_dump: defaults to True.
+            - json_dump: defaults to False.
                 Whether or not to dump data dictionary to JSON or let requests
                 module encode it.
         """
@@ -62,7 +62,7 @@ class AppFirstAPI(object):
         }
         headers.update(kwargs.get('headers', {}))
         data = kwargs.get('data', '')
-        json_dump = kwargs.get('json_dump', True)
+        json_dump = kwargs.get('json_dump', False)
 
         if isinstance(data, dict) and json_dump:
             data = json.dumps(data)
@@ -146,8 +146,7 @@ class AppFirstAPI(object):
             raise TypeError("Data must be a dictionary")
 
         return self._make_api_request('/servers/{0}/'.format(host_id),
-                                      data=data, json_dump=False,
-                                      method='PATCH')
+                                      data=data, method='PATCH')
 
     def delete_server(self, host_id):
         """
@@ -480,8 +479,7 @@ class AppFirstAPI(object):
             if arg in kwargs:
                 data[arg] = kwargs[arg]
 
-        return self._make_api_request('/alerts/', data=data, method='POST',
-                                      json_dump=False)
+        return self._make_api_request('/alerts/', data=data, method='POST')
 
     def delete_alert(self, alert_id):
         """
@@ -561,7 +559,7 @@ class AppFirstAPI(object):
             'servers': ids,
         }
         return self._make_api_request('/server_tags/', data=data,
-                                      method='POST', json_dump=False)
+                                      method='POST')
 
     def delete_server_tag(self, tag_id):
         """
@@ -658,7 +656,7 @@ class AppFirstAPI(object):
                              "in order to create application")
 
         return self._make_api_request('/applications/', data=data,
-                                      method='POST', json_dump=False)
+                                      method='POST')
 
     def delete_process_group(self, app_id):
         """
@@ -719,7 +717,7 @@ class AppFirstAPI(object):
                              "than 32 characters.")
 
         return self._make_api_request('/applications/templates/', data=data,
-                                      method='POST', json_dump=False)
+                                      method='POST')
 
     def delete_process_template(self, template_id):
         """
@@ -821,7 +819,7 @@ class AppFirstAPI(object):
         """
         return self._make_api_request('/users/{0}/'.format(user_id))
 
-    def create_user(self, first_name, last_name, email, country_code=None,
+    def create_user(self, first_name, last_name, email, country_code=1,
                     phone_number=None, avatar_url=None):
         """
         Create a new user profile for this tenant.
@@ -850,6 +848,9 @@ class AppFirstAPI(object):
             raise ValueError("Country code must be int")
         if not isinstance(phone_number, int):
             raise ValueError("Phone number must be int")
+        if avatar_url and len(avatar_url) > 255:
+            raise ValueError("Avatar field is too long. Must be no longer "
+                             "than 30 characters.")
         data = {
             'first_name': first_name,
             'last_name': last_name,
@@ -858,22 +859,25 @@ class AppFirstAPI(object):
             'phone_number': phone_number,
             'avatar_url': avatar_url,
         }
-        return self._make_api_request('/user_profiles/', data=data,
-                                      method='POST', json_dump=False)
+        return self._make_api_request('/users/', data=data, method='POST')
 
-    def update_user(self, user_id, first_name, last_name, email,
+    def update_user(self, user_id, first_name=None, last_name=None, email=None,
                     country_code=None, phone_number=None, avatar_url=None):
         """
         Update the information for this user.
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
-        if len(first_name) > 30 or len(last_name) > 30:
+        if (first_name and len(first_name) > 30) \
+                or (last_name and len(last_name) > 30):
             raise ValueError("Name fields provided are too long. Must be no "
                              "longer than 30 characters.")
-        if not isinstance(country_code, int):
+        if country_code and not isinstance(country_code, int):
             raise ValueError("Country code must be int")
-        if not isinstance(phone_number, int):
+        if phone_number and not isinstance(phone_number, int):
             raise ValueError("Phone number must be int")
+        if avatar_url and len(avatar_url) > 255:
+            raise ValueError("Avatar field is too long. Must be no longer "
+                             "than 30 characters.")
         data = {
             'first_name': first_name,
             'last_name': last_name,
@@ -882,8 +886,8 @@ class AppFirstAPI(object):
             'phone_number': phone_number,
             'avatar_url': avatar_url,
         }
-        return self._make_api_request('/user_profiles/{0}/'.format(user_id),
-                                      data=data, method='PUT', json_dump=False)
+        return self._make_api_request('/users/{0}/'.format(user_id),
+                                      data=data, method='PUT')
 
     def delete_user(self, user_id):
         """
@@ -891,7 +895,7 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/user-profiles/#userprofilesid
         """
-        return self._make_api_request('/user_profiles/{0}/'.format(user_id),
+        return self._make_api_request('/users/{0}/'.format(user_id),
                                       method='DELETE')
 
     def get_account(self):
@@ -947,14 +951,7 @@ class AppFirstAPI(object):
             data['reason'] = kwargs['reason']
 
         return self._make_api_request('/maintenance_windows/', data=data,
-                                      method='POST', json_dump=False)
-
-    def delete_maintenance_window(self, window_id):
-        """
-        Removes maintenance window
-        """
-        url = '/maintenance_windows/{0}/'.format(window_id)
-        return self._make_api_request(url, method='DELETE')
+                                      method='POST')
 
     def update_maintenance_window(self, window_id, start, end, servers,
                                   **kwargs):
@@ -979,6 +976,13 @@ class AppFirstAPI(object):
 
         url = '/maintenance_windows/{0}/'.format(window_id)
         return self._make_api_request(url, data=data, method='PATCH')
+
+    def delete_maintenance_window(self, window_id):
+        """
+        Removes maintenance window
+        """
+        url = '/maintenance_windows/{0}/'.format(window_id)
+        return self._make_api_request(url, method='DELETE')
 
     def get_buckets(self, **kwargs):
         """
