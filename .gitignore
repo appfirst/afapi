@@ -5,6 +5,6 @@
 .DS_Store
 
 # setup.py artifacts
-AppFirstAPI.egg-info/
+afapi.egg-info/
 build/
 dist/

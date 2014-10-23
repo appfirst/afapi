@@ -8,9 +8,13 @@ in a Python environment.
 Installation
 ------------
 
-Clone the repository, cd into the new directory, and run:
 ```
-sudo python setup.py install
+$ sudo pip install afapi
+```
+
+Or, clone the repository, cd into the new directory, and run:
+```
+$ sudo python setup.py install
 ```
 
 Usage

@@ -56,7 +56,7 @@ class CreateDocs(Command):
 
 
 setup(
-    name='AppFirstAPI',
+    name='afapi',
     version='1.0',
     packages=['afapi'],
     install_requires=['requests'],
@@ -67,7 +67,8 @@ setup(
         'test': RunTests,
         'doc': CreateDocs,
     },
-    description="A Python wrapper for interacting with AppFirst's APIs (v5)",
+    description=("A Python wrapper for interacting with AppFirst's APIs (v5)"
+                 "\n\nSee https://github.com/appfirst/afapi for more info."),
     license="Apache2",
     keywords="AppFirst API",
 )
