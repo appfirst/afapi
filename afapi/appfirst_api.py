@@ -625,8 +625,8 @@ class AppFirstAPI(object):
         url = '/applications/{0}/detail/'.format(app_id)
         return self._make_api_request(url, params=params)
 
-    def create_process_group(self, name=None, source_type=None,
-                             template_id=None, **kwargs):
+    def create_process_group(self, name=None, template_id=None,
+                             source_type=None, **kwargs):
         """
         Creates an application based on the documented requirements:
 

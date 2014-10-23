@@ -43,8 +43,8 @@ proc_groups = api.get_process_groups(search='python')
 alert = api.get_alert(231)
 
 # Create a new process group
-application = api.create_process_group("Nginx", source_type='set',
-                                       template_id=7)
+application = api.create_process_group("Nginx", template_id=372,
+                                       source_type='set', set=8092)
 ```
 
 For most data types, the methods follow the following format:
