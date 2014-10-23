@@ -58,6 +58,6 @@ api.delete_object(object_id)
 ```
 
 Each request will return a tuple containing
-`(return_status_code, return_data)`. An exception can be optionally thrown on
+`(return_data, return_status_code)`. An exception can be optionally thrown on
 non-200 return codes by passing the `raise_exceptions=True` flag when creating
 the `AppFirstAPI` instance.
