@@ -5,9 +5,16 @@ AppFirst's Python API Wrapper
 This Python API wrapper allows clients to easily interact with AppFirst's APIs
 in a Python environment.
 
+Installation
+------------
 
-Examples
---------
+Clone the repository, cd into the new directory, and run:
+```
+sudo python setup.py install
+```
+
+Usage
+-----
 
 #### Setup
 ```python
@@ -21,6 +28,12 @@ api = AppFirstAPI('your@email.com', 'pass_key')
 ```python
 # Get a list of all servers
 servers_list = api.get_servers()
+
+# Get StatsD buckets of a particular type
+buckets = api.get_buckets(filter={'type': 'gauge'})
+
+# Search for process groups
+proc_groups = api.get_process_groups(search='python')
 
 # Get details for a particular alert
 alert = api.get_alert(231)
@@ -44,6 +57,3 @@ Each request will return a tuple containing
 `(return_status_code, return_data)`. An exception can be optionally thrown on
 non-200 return codes by passing the `raise_exceptions=True` flag when creating
 the AppFirstAPI instance.
-
-#### Full documentation
-A full list of API methods is available at **[this link]()**.

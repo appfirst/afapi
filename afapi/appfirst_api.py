@@ -16,6 +16,7 @@ except ImportError:
     import json
 
 import requests
+from requests.auth import HTTPBasicAuth
 
 from . import exceptions
 
@@ -38,6 +39,7 @@ class AppFirstAPI(object):
         self.version = version
         self.raise_exceptions = raise_exceptions
         self.debug = debug
+        self.auth = HTTPBasicAuth(self.email, self.api_key)
 
     # Helper methods
     def _make_api_request(self, url, **kwargs):
@@ -86,9 +88,8 @@ class AppFirstAPI(object):
                    "headers={4}".format(method, full_url, params, data,
                                         headers)))
 
-        r = request_method(full_url, auth=(self.email, self.api_key),
-                           params=params, data=data, headers=headers,
-                           verify=self.use_strict_ssl)
+        r = request_method(full_url, auth=self.auth, params=params, data=data,
+                           headers=headers, verify=self.use_strict_ssl)
         if self.debug:
             print("< Got response with status: {0}".format(r.status_code))
 
@@ -113,6 +114,8 @@ class AppFirstAPI(object):
             params['limit'] = kwargs['limit']
         if 'page' in kwargs:
             params['page'] = kwargs['page']
+        if 'search' in kwargs:
+            params['search'] = kwargs['search']
         if 'filter' in kwargs:
             params.update(kwargs['filter'])
         return params
