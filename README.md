@@ -3,7 +3,7 @@ AppFirst's Python API Wrapper
 [![Build Status](https://travis-ci.org/appfirst/afapi.svg)](https://travis-ci.org/appfirst/afapi)
 
 This Python API wrapper allows clients to easily interact with AppFirst's APIs
-in a Python environment.
+in a Python environment. Compatible with Python 2.6+ including Python 3.
 
 Installation
 ------------
@@ -60,4 +60,4 @@ api.delete_object(object_id)
 Each request will return a tuple containing
 `(return_status_code, return_data)`. An exception can be optionally thrown on
 non-200 return codes by passing the `raise_exceptions=True` flag when creating
-the AppFirstAPI instance.
+the `AppFirstAPI` instance.

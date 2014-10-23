@@ -20,6 +20,12 @@ from requests.auth import HTTPBasicAuth
 
 from . import exceptions
 
+# Python3 compatibility
+try:
+    string_types = basestring
+except NameError:
+    string_types = str
+
 
 class AppFirstAPI(object):
     """
@@ -634,7 +640,7 @@ class AppFirstAPI(object):
         """
         data = {'template': template_id}
 
-        if isinstance(name, basestring) and len(name) <= 32:
+        if isinstance(name, string_types) and len(name) <= 32:
             data['name'] = name
         else:
             raise ValueError("Name provided is too long. Must be no longer "
