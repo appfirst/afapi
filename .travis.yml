@@ -1,14 +1,14 @@
 language: python
-
 python:
-    - "2.6"
-    - "2.7"
-    - "3.3"
-    - "3.4"
-
+- '2.6'
+- '2.7'
+- '3.3'
+- '3.4'
 install:
-    - pip install flake8
-    - pip install requests
-
+- pip install flake8
+- pip install requests
 script:
-    - python setup.py test
+- python setup.py test
+notifications:
+  slack:
+    secure: QCOYLq/UJHGWq5UrHsCupPTEZQwyY+SpzeubCIUFbMO94XdnKr/9Mv8I7decuqU4v2Z5HoZT0MLo4FfKqIbROPnPm5tyrhwj7hdzoaKashj2FKjroyDRavZB8eLZ9lEHzljI7KAKaBF/MwfPXRCaJudu2CzMMZDWkHJfFEvDkXk=
