@@ -33,13 +33,16 @@ api = AppFirstAPI('your@email.com', 'pass_key')
 # Get a list of all servers
 servers_list = api.get_servers()
 
-# Get StatsD buckets of a particular type
+# Get aggregated data for a server with id 11374
+server_data = api.get_server_data(11374, num=10)
+
+# Get a list of StatsD buckets of a particular type
 buckets = api.get_buckets(filter={'type': 'gauge'})
 
 # Search for process groups
 proc_groups = api.get_process_groups(search='python')
 
-# Get details for a particular alert
+# Get details for a particular alert with id 231
 alert = api.get_alert(231)
 
 # Create a new process group
@@ -50,8 +53,9 @@ application = api.create_process_group("Nginx", template_id=372,
 For most data types, the methods follow the following format:
 
 ```python
-api.get_objects()
-api.get_object(object_id)
+api.get_objects()  # kwargs for filter/search/limit
+api.get_object(object_id) 
+api.get_object_data(object_id)  # kwargs for start/end/num/time_step
 api.create_object(*args, **kwargs)
 api.update_object(object_id, *args, **kwargs)
 api.delete_object(object_id)
