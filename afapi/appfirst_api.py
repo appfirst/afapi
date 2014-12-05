@@ -123,7 +123,7 @@ class AppFirstAPI(object):
         if 'search' in kwargs:
             params['search'] = kwargs['search']
         if 'filter' in kwargs:
-            params['filter'] = kwargs['filter']
+            params.update(kwargs['filter'])
         return params
 
     def _get_data_params(self, **kwargs):
