@@ -830,16 +830,18 @@ class AppFirstAPI(object):
         http://support.appfirst.com/apis/logs/#logiddata
         """
         params = self._get_data_params(**kwargs)
-        return self._make_api_request('/logs/{0}/data/'.format(log_id), params=params)
+        return self._make_api_request('/logs/{0}/data/'.format(log_id),
+                                      params=params)
 
     def get_log_details(self, log_id, **kwargs):
         """
-        Retrieves detail data for the given log. 
+        Retrieves detail data for the given log.
 
         http://support.appfirst.com/apis/logs/#logiddetail
         """
         params = self._get_data_params(**kwargs)
-        return self._make_api_request('/logs/{0}/detail/'.format(log_id), params=params)
+        return self._make_api_request('/logs/{0}/detail/'.format(log_id),
+                                      params=params)
 
     def get_users(self):
         """
