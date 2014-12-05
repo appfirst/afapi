@@ -134,7 +134,6 @@ class AppFirstAPI(object):
         end = kwargs.get('end', None)
         start = kwargs.get('start', None)
         time_step = kwargs.get('time_step', None)
-        raw_filter = kwargs.get('search', None)
 
         # Sanity Checks
         if end:
@@ -154,17 +153,6 @@ class AppFirstAPI(object):
                 raise ValueError("Invalid time_step: {0}".format(time_step))
             else:
                 params['time_step'] = time_step
-        if raw_filter:
-            try:
-                # Allow users to pass result of re.compile()
-                filt = raw_filter.pattern
-            except Exception:
-                filt = raw_filter
-            if not isinstance(filt, string_types):
-                raise TypeError("Filter parameter must be re-compiled object "
-                                "or string.")
-            else:
-                params['filter'] = filt
 
         return params
 
@@ -274,7 +262,7 @@ class AppFirstAPI(object):
         url = '/servers/{0}/polled_data_config/'.format(host_id)
         return self._make_api_request(url, method='PATCH', data=data)
 
-    def get_host_server_tags(self, host_id, **kwargs):
+    def get_server_server_tags(self, host_id, **kwargs):
         """
         Retrieves the server tag information for a particular server.
 
@@ -284,7 +272,7 @@ class AppFirstAPI(object):
         return self._make_api_request('/servers/{0}/tags/'.format(host_id),
                                       params=params)
 
-    def update_host_server_tags(self, host_id, new_tags):
+    def update_server_server_tags(self, host_id, new_tags):
         """
         Updates the server tags that this server belongs to.
 
@@ -777,6 +765,18 @@ class AppFirstAPI(object):
         http://support.appfirst.com/apis/logs/#logiddetail
         """
         params = self._get_data_params(**kwargs)
+        raw_filter = kwargs.get('filter', None)
+        if raw_filter:
+            try:
+                # Allow users to pass result of re.compile()
+                filt = raw_filter.pattern
+            except Exception:
+                filt = raw_filter
+            if not isinstance(filt, string_types):
+                raise TypeError("Filter parameter must be re.compiled object "
+                                "or string.")
+            else:
+                params['filter'] = filt
         return self._make_api_request('/logs/{0}/detail/'.format(log_id),
                                       params=params)
 
