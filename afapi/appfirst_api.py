@@ -128,17 +128,44 @@ class AppFirstAPI(object):
 
     def _get_data_params(self, **kwargs):
         """
-        Function to get additional parameters (for HBase queries)
+        Function to get additional parameters (for data queries)
         """
-        params = {}
-        if 'start' in kwargs:
-            params['start'] = kwargs['start']
-        if 'end' in kwargs:
-            params['end'] = kwargs['end']
-        if 'num' in kwargs:
-            params['num'] = kwargs['num']
-        if 'filter' in kwargs:
-            params['filter'] = kwargs['filter']
+        params = {'num': kwargs.get('num', 1)}
+        end = kwargs.get('end', None)
+        start = kwargs.get('start', None)
+        time_step = kwargs.get('time_step', None)
+        raw_filter = kwargs.get('search', None)
+
+        # Sanity Checks
+        if end:
+            if not isinstance(end, datetime.datetime):
+                raise TypeError("end value must be a datetime.datetime "
+                                "instance")
+            else:
+                params['end'] = calendar.timegm(end.timetuple())
+        if start:
+            if not isinstance(start, datetime.datetime):
+                raise TypeError("start value must be a datetime.datetime "
+                                "instance")
+            else:
+                params['start'] = calendar.timegm(start.timetuple())
+        if time_step:
+            if time_step not in ['Minute', 'Hour', 'Day']:
+                raise ValueError("Invalid time_step: {0}".format(time_step))
+            else:
+                params['time_step'] = time_step
+        if raw_filter:
+            try:
+                # Allow users to pass result of re.compile()
+                filt = raw_filter.pattern
+            except Exception:
+                filt = raw_filter
+            if not isinstance(filt, string_types):
+                raise TypeError("Filter parameter must be re-compiled object "
+                                "or string.")
+            else:
+                params['filter'] = filt
+
         return params
 
     # Server APIs
@@ -198,27 +225,7 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/servers/#serveriddata
         """
-        params = {'num': kwargs.get('num', 1)}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-        time_step = kwargs.get('time_step', 'Minute')
-
-        # Sanity Checks
-        if end is not None and not isinstance(end, datetime.datetime):
-            raise TypeError("end value must be a datetime.datetime instance")
-        elif end is not None:
-            params['end'] = calendar.timegm(end.timetuple())
-
-        if start is not None and not isinstance(start, datetime.datetime):
-            raise TypeError("start value must be a datetime.datetime instance")
-        elif start is not None:
-            params['start'] = calendar.timegm(start.timetuple())
-
-        if time_step not in ['Minute', 'Hour', 'Day']:
-            raise ValueError("Invalid time_step: {0}".format(time_step))
-        else:
-            params['time_step'] = time_step
-
+        params = self._get_data_params(**kwargs)
         # Send request
         return self._make_api_request('/servers/{0}/data/'.format(host_id),
                                       params=params)
@@ -238,22 +245,9 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/servers/#serveridoutages
         """
-        params = {'limit': kwargs.get('num', 1)}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-
-        # Sanity Checks
-        if end is not None and not isinstance(end, datetime.datetime):
-            raise TypeError("end value must be a datetime.datetime instance")
-        elif end is not None:
-            params['end'] = calendar.timegm(end.timetuple())
-
-        if start is not None and not isinstance(start, datetime.datetime):
-            raise TypeError("start value must be a datetime.datetime instance")
-        elif start is not None:
-            params['start'] = calendar.timegm(start.timetuple())
-
-        return self._make_api_request('/servers/{0}/outages/'.format(host_id))
+        params = self._get_list_params(**kwargs)
+        return self._make_api_request('/servers/{0}/outages/'.format(host_id),
+                                      params=params)
 
     def get_polled_data_config(self, host_id):
         """
@@ -280,7 +274,7 @@ class AppFirstAPI(object):
         url = '/servers/{0}/polled_data_config/'.format(host_id)
         return self._make_api_request(url, method='PATCH', data=data)
 
-    def get_server_tags(self, host_id, **kwargs):
+    def get_host_server_tags(self, host_id, **kwargs):
         """
         Retrieves the server tag information for a particular server.
 
@@ -290,7 +284,7 @@ class AppFirstAPI(object):
         return self._make_api_request('/servers/{0}/tags/'.format(host_id),
                                       params=params)
 
-    def update_server_tags(self, host_id, new_tags):
+    def update_host_server_tags(self, host_id, new_tags):
         """
         Updates the server tags that this server belongs to.
 
@@ -326,21 +320,7 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/servers/#serveridprocesses
         """
-        params = {}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-
-        # Sanity Checks
-        if end is not None and not isinstance(end, datetime.datetime):
-            raise TypeError("end value must be a datetime.datetime instance")
-        elif end is not None:
-            params['end'] = calendar.timegm(end.timetuple())
-
-        if start is not None and not isinstance(start, datetime.datetime):
-            raise TypeError("start value must be a datetime.datetime instance")
-        elif start is not None:
-            params['start'] = calendar.timegm(start.timetuple())
-
+        params = self._get_data_params(**kwargs)
         url = '/servers/{0}/processes/'.format(host_id)
         return self._make_api_request(url, params=params)
 
@@ -361,28 +341,7 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/servers/#serveridprocessesdata
         """
-        params = {'num': kwargs.get('num', 1)}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-        time_step = kwargs.get('time_step', 'Minute')
-
-        # Sanity Checks
-        if end is not None and not isinstance(end, datetime.datetime):
-            raise TypeError("end value must be a datetime.datetime instance")
-        elif end is not None:
-            params['end'] = calendar.timegm(end.timetuple())
-
-        if start is not None and not isinstance(start, datetime.datetime):
-            raise TypeError("start value must be a datetime.datetime instance")
-        elif start is not None:
-            params['start'] = calendar.timegm(start.timetuple())
-
-        if time_step not in ['Minute', 'Hour', 'Day']:
-            raise ValueError("Invalid time_step: {0}".format(time_step))
-        elif time_step is not None:
-            params['time_step'] = time_step
-
-        # Send request
+        params = self._get_data_params(**kwargs)
         url = '/servers/{0}/processes/data/'.format(host_id)
         return self._make_api_request(url, params=params)
 
@@ -550,7 +509,7 @@ class AppFirstAPI(object):
         return self._make_api_request(url)
 
     # Server Tags
-    def get_all_server_tags(self, **kwargs):
+    def get_server_tags(self, **kwargs):
         """
         Lists all available server tags.
 
@@ -607,12 +566,13 @@ class AppFirstAPI(object):
         """
         return self._make_api_request('/applications/{0}/'.format(app_id))
 
-    def get_process_group_processes(self, app_id):
+    def get_process_group_processes(self, app_id, **kwargs):
         """
         Returns a dictionary of processes used by specific app_id
         """
-        url = '/applications/{0}/processes'.format(app_id)
-        return self._make_api_request(url)
+        params = self._get_data_params(**kwargs)
+        url = '/applications/{0}/processes/'.format(app_id)
+        return self._make_api_request(url, params=params)
 
     def get_process_group_data(self, app_id, **kwargs):
         """
@@ -621,12 +581,7 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/applications/#applicationiddata
         """
-        params = {
-            'num': kwargs.get('num', None),
-            'end': kwargs.get('end', None),
-            'start': kwargs.get('start', None),
-            'time_step': kwargs.get('time_step', None),
-        }
+        params = self._get_data_params(**kwargs)
         return self._make_api_request('/applications/{0}/data/'.format(app_id),
                                       params=params)
 
@@ -637,6 +592,7 @@ class AppFirstAPI(object):
         http://support.appfirst.com/apis/applications/#applicationiddetail
         """
         params = {'time': kwargs.get('time', None)}
+        params.update(self._get_data_params(**kwargs))
         url = '/applications/{0}/detail/'.format(app_id)
         return self._make_api_request(url, params=params)
 
@@ -770,27 +726,7 @@ class AppFirstAPI(object):
         """
         if uid is None:
             uid = '{0}_{1}_{2}'.format(server_id, pid, createtime)
-        params = {'num': kwargs.get('num', 1)}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-        time_step = kwargs.get('time_step', 'Minute')
-
-        # Sanity Checks
-        if end is not None and not isinstance(end, datetime.datetime):
-            raise TypeError("end value must be a datetime.datetime instance")
-        elif end is not None:
-            params['end'] = calendar.timegm(end.timetuple())
-
-        if start is not None and not isinstance(start, datetime.datetime):
-            raise TypeError("start value must be a datetime.datetime instance")
-        elif start is not None:
-            params['start'] = calendar.timegm(start.timetuple())
-
-        if time_step not in ['Minute', 'Hour', 'Day']:
-            raise ValueError("Invalid time_step: {0}".format(time_step))
-        else:
-            params['time_step'] = time_step
-
+        params = self._get_data_params(**kwargs)
         return self._make_api_request('/processes/{0}/data/'.format(uid),
                                       params=params)
 
@@ -803,6 +739,7 @@ class AppFirstAPI(object):
         """
         uid = '{0}_{1}_{2}'.format(server_id, pid, createtime)
         params = {'time': kwargs['time']} if 'time' in kwargs else {}
+        params.update(self._get_data_params(**kwargs))
         return self._make_api_request('/processes/{0}/detail/'.format(uid),
                                       params=params)
 
@@ -1043,28 +980,9 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/buckets/#bucketid
         """
-        params = {'num': kwargs.get('num', 1)}
-        end = kwargs.get('end', None)
-        start = kwargs.get('start', None)
-        time_step = kwargs.get('time_step', 'Minute')
-
-        # Sanity Checks
-        if end is not None and not isinstance(end, datetime.datetime):
-            raise TypeError("end value must be a datetime.datetime instance")
-        elif end is not None:
-            params['end'] = calendar.timegm(end.timetuple())
-
-        if start is not None and not isinstance(start, datetime.datetime):
-            raise TypeError("start value must be a datetime.datetime instance")
-        elif start is not None:
-            params['start'] = calendar.timegm(start.timetuple())
-
-        if time_step not in ['Minute', 'Hour', 'Day']:
-            raise ValueError("Invalid time_step: {0}".format(time_step))
-        else:
-            params['time_step'] = time_step
-
-        return self._make_api_request('/buckets/{0}/data/'.format(bucket_id))
+        params = self._get_data_params(**kwargs)
+        return self._make_api_request('/buckets/{0}/data/'.format(bucket_id),
+                                      params=params)
 
     def delete_bucket(self, bucket_id):
         """

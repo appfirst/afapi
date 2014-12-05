@@ -57,10 +57,10 @@ class CreateDocs(Command):
 
 setup(
     name='afapi',
-    version='1.0.1',
+    version='1.0.2',
     packages=['afapi'],
     install_requires=['requests'],
-    author="Michael Okner, Nick Reichel, Morgan Snyder",
+    author="Michael Okner, Nick Reichel, Zach Huffman, Morgan Snyder",
     author_email="michael@appfirst.com",
     url="https://github.com/appfirst/afapi",
     cmdclass={
