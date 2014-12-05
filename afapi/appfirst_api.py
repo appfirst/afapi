@@ -816,6 +816,14 @@ class AppFirstAPI(object):
         """
         return self._make_api_request('/logs/{0}/data/'.format(log_id))
 
+    def get_log_details(self, log_id, **kwargs):
+        """
+        Retrieves detail data for the given log. 
+
+        http://support.appfirst.com/apis/logs/#logiddetail
+        """
+        return self._make_api_request('/logs/{0}/detail/'.format(log_id))
+
     def get_users(self):
         """
         Retrieve a list of users on your account
