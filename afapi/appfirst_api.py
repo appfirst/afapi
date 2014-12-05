@@ -137,6 +137,8 @@ class AppFirstAPI(object):
             params['end'] = kwargs['end']
         if 'num' in kwargs:
             params['num'] = kwargs['num']
+        if 'filter' in kwargs:
+            params['filter'] = kwargs['filter']
         return params
 
     # Server APIs
@@ -828,8 +830,6 @@ class AppFirstAPI(object):
         http://support.appfirst.com/apis/logs/#logiddata
         """
         params = self._get_data_params(**kwargs)
-        params.update(self._get_list_params(**kwargs))
-
         return self._make_api_request('/logs/{0}/data/'.format(log_id), params=params)
 
     def get_log_details(self, log_id, **kwargs):
@@ -839,8 +839,6 @@ class AppFirstAPI(object):
         http://support.appfirst.com/apis/logs/#logiddetail
         """
         params = self._get_data_params(**kwargs)
-        params.update(self._get_list_params(**kwargs))
-
         return self._make_api_request('/logs/{0}/detail/'.format(log_id), params=params)
 
     def get_users(self):
