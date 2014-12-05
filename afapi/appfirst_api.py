@@ -126,6 +126,19 @@ class AppFirstAPI(object):
             params.update(kwargs['filter'])
         return params
 
+    def _get_data_params(self, **kwargs):
+        """
+        Function to get additional parameters (for HBase queries)
+        """
+        params = {}
+        if 'start' in kwargs:
+            params['start'] = kwargs['start']
+        if 'end' in kwargs:
+            params['end'] = kwargs['end']
+        if 'num' in kwargs:
+            params['num'] = kwargs['num']
+        return params
+
     # Server APIs
     def get_servers(self, **kwargs):
         """
