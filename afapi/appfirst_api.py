@@ -237,6 +237,36 @@ class AppFirstAPI(object):
         return self._make_api_request('/servers/{0}/outages/'.format(host_id),
                                       params=params)
 
+    def get_all_polled_data(self, **kwargs):
+        """
+        Get the Polled Data for all servers
+
+        http://support.appfirst.com/apis/polled-data/#polleddata
+        """
+        return self._make_api_request('/polled_data/')
+
+    def get_polled_data(self, data_id):
+        """
+        Get the Polled Data for a specific server
+
+        http://support.appfirst.com/apis/polled-data/#polleddata
+        """
+
+        url = '/polled_data/{0}/'.format(data_id)
+
+        return self._make_api_request(url)
+
+    def get_polled_data_data(self, data_id):
+        """
+        Get the Polled Data data for a specific server
+
+        http://support.appfirst.com/apis/polled-data/#polleddataiddata
+        """
+
+        url = '/polled_data/{0}/data/'.format(data_id)
+
+        return self._make_api_request(url)
+
     def get_polled_data_config(self, host_id):
         """
         Get the Polled Data config on a server.
