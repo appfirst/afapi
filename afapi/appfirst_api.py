@@ -251,20 +251,16 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/polled-data/#polleddata
         """
-
         url = '/polled_data/{0}/'.format(data_id)
-
         return self._make_api_request(url)
 
-    def get_polled_data_data(self, data_id):
+    def get_polled_data_data(self, data_id, **kwargs):
         """
         Get the Polled Data data for a specific server
 
         http://support.appfirst.com/apis/polled-data/#polleddataiddata
         """
-
         url = '/polled_data/{0}/data/'.format(data_id)
-
         return self._make_api_request(url)
 
     def get_polled_data_config(self, host_id):
@@ -276,7 +272,7 @@ class AppFirstAPI(object):
         url = '/servers/{0}/polled_data_config/'.format(host_id)
         return self._make_api_request(url)
 
-    def update_polled_data_config(self, host_id, data):
+    def update_polled_data_config(self, host_id, new_config):
         """
         Update the Polled Data config on a server.
 
@@ -286,11 +282,10 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/servers/#serveridpolleddata
         """
-        if not isinstance(data, dict):
-            raise TypeError("Data must be a dictionary")
-
+        if not isinstance(new_config, dict):
+            raise TypeError("New config must be a dictionary")
         url = '/servers/{0}/polled_data_config/'.format(host_id)
-        return self._make_api_request(url, method='PATCH', data=data)
+        return self._make_api_request(url, method='PATCH', data=new_config)
 
     def get_server_server_tags(self, host_id, **kwargs):
         """
