@@ -243,7 +243,8 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/polled-data/#polleddata
         """
-        return self._make_api_request('/polled_data/')
+        params = self._get_list_params(**kwargs)
+        return self._make_api_request('/polled_data/', params=params)
 
     def get_polled_data(self, data_id):
         """
@@ -251,6 +252,7 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/polled-data/#polleddata
         """
+        
         url = '/polled_data/{0}/'.format(data_id)
         return self._make_api_request(url)
 
