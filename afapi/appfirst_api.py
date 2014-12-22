@@ -102,7 +102,7 @@ class AppFirstAPI(object):
         if r.status_code not in self.ok_codes and self.raise_exceptions:
             r_msg = u"{0.status_code}: {0.text}".format(r) \
                 if r.text else r.status_code
-            exc_msg = u"{0} reqeust to url {1} failed".format(method, full_url)
+            exc_msg = u"{0} request to url {1} failed".format(method, full_url)
             raise exceptions.RequestError(u"{0} ({1})".format(exc_msg, r_msg))
         else:
             try:
