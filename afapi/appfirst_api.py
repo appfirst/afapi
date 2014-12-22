@@ -898,7 +898,7 @@ class AppFirstAPI(object):
             raise ValueError("Phone number must be int")
         if avatar_url and len(avatar_url) > 255:
             raise ValueError("Avatar field is too long. Must be no longer "
-                             "than 30 characters.")
+                             "than 255 characters.")
         data = {
             'first_name': first_name,
             'last_name': last_name,
@@ -925,7 +925,7 @@ class AppFirstAPI(object):
             raise ValueError("Phone number must be int")
         if avatar_url and len(avatar_url) > 255:
             raise ValueError("Avatar field is too long. Must be no longer "
-                             "than 30 characters.")
+                             "than 255 characters.")
         data = {
             'first_name': first_name,
             'last_name': last_name,
