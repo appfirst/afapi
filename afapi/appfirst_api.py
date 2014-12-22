@@ -807,6 +807,54 @@ class AppFirstAPI(object):
         return self._make_api_request('/logs/{0}/detail/'.format(log_id),
                                       params=params)
 
+    def create_log(self, server_id, source_type, source, limit=2000,
+                   log_filter="", warning="", critical=""):
+        """
+        Create a new log for this tenant.
+
+        Arguments
+
+        server_id (required, int) - The id of the server the log is on
+        source_type (required, String) - The type of the log, one of:
+            EVENTLOG, SYSLOG, FILE.
+        source (required, String, length:1-256) - The source of the
+            log.
+        limit (required, int) - Max number of lines to retrieve per
+            minute.
+        log_filter (required, String, length:1-64) - Only include
+            messages matching the filter. Include all if not given.
+        warning (required, String, length:1-64) - Filter to mark
+            messages as warning.
+        critical (required, String, length:1-64) - Filter to mark
+            messages as critical.
+
+        http://support.appfirst.com/apis/logs/#logs
+        """
+
+        # Sanity checks
+        if not isinstance(server_id, int):
+            raise ValueError("Server ID must be int")
+        if not isinstance(limit, int):
+            raise ValueError("Limit must be int")
+        if source_type not in ['EVENTLOG', 'SYSLOG', 'FILE']:
+            raise ValueError("Source type must be one of 'EVENTLOG', "
+                             "'SYSLOG' or 'FILE'.")
+        if len(log_filter) > 64 or len(warning) > 64 or len(critical) > 64:
+            raise ValueError("Filter fields are too long. Must be no longer "
+                             "than 64 characters.")
+
+        data = {
+            'server_id': server_id,
+            'source_type': source_type,
+            'source': source,
+            'limit': limit,
+            'log_filter': log_filter,
+            'warning': warning,
+            'critical': critical,
+            }
+
+        return self._make_api_request("/logs/", data=data, method='POST')
+
     def get_users(self):
         """
         Retrieve a list of users on your account
