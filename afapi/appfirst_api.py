@@ -252,7 +252,6 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/polled-data/#polleddata
         """
-        
         url = '/polled_data/{0}/'.format(data_id)
         return self._make_api_request(url)
 
