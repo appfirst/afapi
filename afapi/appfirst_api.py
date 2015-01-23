@@ -829,7 +829,6 @@ class AppFirstAPI(object):
 
         http://support.appfirst.com/apis/logs/#logs
         """
-
         # Sanity checks
         if not isinstance(server_id, int):
             raise ValueError("Server ID must be int")
@@ -850,8 +849,7 @@ class AppFirstAPI(object):
             'log_filter': log_filter,
             'warning': warning,
             'critical': critical,
-            }
-
+        }
         return self._make_api_request("/logs/", data=data, method='POST')
 
     def get_users(self):

@@ -57,7 +57,7 @@ class CreateDocs(Command):
 
 setup(
     name='afapi',
-    version='1.0.3',
+    version='1.0.4',
     packages=['afapi'],
     install_requires=['requests'],
     author="Michael Okner, Nick Reichel, Zach Huffman, Morgan Snyder",
