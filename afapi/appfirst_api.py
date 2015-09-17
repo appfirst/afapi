@@ -745,7 +745,7 @@ class AppFirstAPI(object):
                                       params=params)
 
     def get_process_details(self, server_id=None, pid=None, createtime=None,
-                         uid=None, **kwargs):
+                            uid=None, **kwargs):
         """
         Retrieve detailed file/socket/thread/registry data for a process
         Specify either a uid of the form "<server_id>_<pid>_<createtime>" or
